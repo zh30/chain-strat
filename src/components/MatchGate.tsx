@@ -20,12 +20,12 @@ export function MatchGate() {
     status === 'error'
       ? error
       : mode === 'bot'
-        ? '正在生成对手连招，战场即将开启。'
+        ? '对方的计正在写死。渊门将开。'
         : critical
-          ? '无人应战。倒计时结束将派出机器人。'
+          ? '无人应战。倒计时结束，渊会派出影旗。'
           : seconds <= 12
-            ? '扫描半径扩大。仍在等待旗鼓相当的对手。'
-            : '按积分最近匹配。二十秒内无人，则派出机器人。'
+            ? '石阶上还没有旗鼓相当的谋主。'
+            : '按名册远近配对。二十息内无人，则派出影旗。'
 
   return (
     <section className="relative -mx-4 flex min-h-[70vh] flex-col items-center justify-center overflow-hidden px-4">

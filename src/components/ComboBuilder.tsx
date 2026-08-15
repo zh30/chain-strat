@@ -37,7 +37,7 @@ export function ComboBuilder() {
           className="mt-4 rounded-full bg-gold px-6 py-2 text-sm font-medium text-ink"
           onClick={() => setScreen('library')}
         >
-          去英雄库选择
+          去选将
         </button>
       </section>
     )
@@ -55,11 +55,11 @@ export function ComboBuilder() {
     <section className="grid gap-6 lg:grid-cols-[1.2fr_0.8fr]">
       <div className="panel rounded-2xl p-6">
         <div className="flex items-center justify-between">
-          <h2 className="font-display text-2xl">
-            {hero.nameZh} · 连招录制
+          <h2 className="font-display text-2xl text-gold">
+            {hero.nameZh} · 编计
           </h2>
           <button type="button" className="text-sm text-mute" onClick={() => setScreen('library')}>
-            英雄库
+            选将
           </button>
         </div>
         <div className="mt-4">
@@ -149,9 +149,9 @@ export function ComboBuilder() {
           )}
           {comboContractReady() && (
             <div className="panel rounded-2xl p-5">
-              <h3 className="text-sm uppercase tracking-widest text-gold-dim">连招 NFT</h3>
+              <h3 className="text-sm uppercase tracking-widest text-gold-dim">玉简</h3>
               <p className="mt-2 text-xs text-mute">
-                铸成指定英雄的 SkillCombo，下次出战直接选用。NFT 可挂单卖给别人。
+                把这套计烙成玉简。下次出战直接抽出。玉简可挂到玉市卖掉。
               </p>
               {combos.error && <p className="mt-2 text-xs text-cinnabar">{combos.error}</p>}
               {(combos.phase === 'wallet' || combos.phase === 'pending') && (
@@ -165,7 +165,7 @@ export function ComboBuilder() {
                 className="mt-3 w-full rounded-full border border-gold/40 py-2 text-sm text-gold"
                 onClick={() => hero && void combos.mint(hero, combo)}
               >
-                铸成连招 NFT
+                烙成玉简
               </button>
               <div className="mt-4">
                 <ComboShelf

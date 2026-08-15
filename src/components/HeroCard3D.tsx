@@ -1,3 +1,4 @@
+import { heroLore } from '../lib/lore'
 import type { Hero } from '../lib/types'
 import { HERO_ART } from '../lib/visuals'
 
@@ -24,8 +25,8 @@ export function HeroCard3D({ hero, active, onSelect }: Props) {
         <img src={HERO_ART[hero.id]} alt={hero.nameZh} className="hero-stage-img" />
         <div className="hero-stage-shine" />
       </div>
-      <div className={`mt-3 font-display text-xl ${active ? 'text-gold' : ''}`}>{hero.nameZh}</div>
-      <div className="text-xs uppercase tracking-widest text-gold-dim">{hero.name}</div>
+      <div className={`mt-3 font-display text-xl ${active ? 'text-gold' : ''}`}>{heroLore(hero.id).title}</div>
+      <div className="text-xs text-gold-dim">{heroLore(hero.id).epithet}</div>
       <div className="mt-1 text-sm text-mute">HP {hero.hp}</div>
     </button>
   )

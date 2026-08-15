@@ -23,11 +23,12 @@ export function ComboMarket() {
     <section>
       <div className="mb-6 flex items-end justify-between gap-4">
         <div>
-          <h2 className="font-display text-3xl">连招市集</h2>
-          <p className="mt-1 text-sm text-mute">别人挂出的 SkillCombo NFT。买下后即可给对应英雄直接出战。</p>
+          <p className="page-kicker">玉简</p>
+          <h2 className="font-display text-4xl text-gold">玉市</h2>
+          <p className="mt-1 text-sm text-mute">买别人写死的连环。买的是计，不是将。</p>
         </div>
         <button type="button" className="text-sm text-mute" onClick={() => setScreen('hall')}>
-          返回大厅
+          回策场
         </button>
       </div>
 

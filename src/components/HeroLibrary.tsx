@@ -19,11 +19,12 @@ export function HeroLibrary() {
     <section className="pb-36">
       <div className="mb-6 flex items-end justify-between gap-4">
         <div>
-          <h2 className="font-display text-3xl">我的英雄库</h2>
-          <p className="mt-1 text-sm text-mute">点选一名英雄，再选用已上链的连招 NFT，右下角出战。</p>
+          <p className="page-kicker">魂旗</p>
+          <h2 className="font-display text-4xl text-gold">选将</h2>
+          <p className="mt-1 text-sm text-mute">点出战的那一面旗。有玉简就直接带上。</p>
         </div>
         <button type="button" className="text-sm text-mute" onClick={() => setScreen('hall')}>
-          返回大厅
+          回策场
         </button>
       </div>
 
@@ -61,8 +62,8 @@ export function HeroLibrary() {
 
       {claimed && selected && comboContractReady() && (
         <div className="panel mt-6 rounded-2xl p-5">
-          <div className="font-display text-lg text-gold">{selected.nameZh} 的连招 NFT</div>
-          <p className="mt-1 text-xs text-mute">点一套直接带进出战。没有的话去编连招里铸造。</p>
+          <div className="font-display text-lg text-gold">{selected.nameZh} 的玉简</div>
+          <p className="mt-1 text-xs text-mute">点一套直接带进编计。没有就去自己写。</p>
           <div className="mt-4">
             <ComboShelf
               items={combos.owned}

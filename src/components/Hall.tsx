@@ -1,5 +1,7 @@
 import { useStarterPack } from '../hooks/useStarterPack'
 import { getHero } from '../lib/heroes'
+import { LORE, heroLore } from '../lib/lore'
+import { ARENA_ART, HERO_ART } from '../lib/visuals'
 import { useGame } from '../store'
 
 export function Hall() {
@@ -7,94 +9,97 @@ export function Hall() {
   const setScreen = useGame((s) => s.setScreen)
   const { claimed, checking, phase, error, wrongNetwork, canClaim, claim } = useStarterPack()
   const selected = claimed && heroId ? getHero(heroId) : null
+  const art = selected ? HERO_ART[selected.id] : ARENA_ART
+  const lore = selected ? heroLore(selected.id) : null
 
   return (
-    <section>
-      <div className="mb-8">
-        <h2 className="font-display text-3xl">大厅</h2>
-        <p className="mt-1 text-sm text-mute">先谋后动。英雄、连招、对战从这里进入。</p>
+    <section className="lobby">
+      <div className="lobby-hero">
+        <img src={art} alt="" />
+        <div className="lobby-hero-copy">
+          <span className="page-kicker">连环渊</span>
+          <strong>{selected ? lore?.title : '策场'}</strong>
+          <p className="mt-2 max-w-md text-sm text-paper/80">
+            {selected ? lore?.line : LORE.hook}
+          </p>
+        </div>
       </div>
 
-      {wrongNetwork && (
-        <div className="panel mb-6 rounded-2xl border-cinnabar/40 p-4 text-sm">
-          钱包还在别的网络。点右上角网络图标，切换到 <span className="text-gold">Monad Testnet</span>。
-        </div>
-      )}
+      <div className="flex flex-col gap-3">
+        {wrongNetwork && (
+          <div className="lobby-door border-cinnabar/50">
+            <b>断线</b>
+            <div>
+              <strong>旗不认这座渊</strong>
+              <p className="mt-1 text-sm text-mute">把钱包切到 Monad Testnet。右上角网络图标。</p>
+            </div>
+          </div>
+        )}
 
-      {checking && <p className="mb-6 text-sm text-mute">正在确认你的英雄…</p>}
+        {checking && <p className="text-sm text-mute">渊正在认你的旗…</p>}
 
-      {!wrongNetwork && !checking && !claimed && (
-        <div className="panel mb-6 rounded-2xl p-5">
-          <div className="font-display text-lg text-gold">先领取四名英雄</div>
-          <p className="mt-2 text-sm text-mute">
-            战士、法师、刺客、游侠会一次性铸成灵魂绑定 NFT，随后进入你的英雄库。
-            钱包里只需确认
-            <strong className="mx-1 text-paper">一笔交易</strong>
-            。拒绝的话无法进入匹配或人机对战。
-          </p>
-          {phase === 'wallet' && (
-            <p className="mt-3 text-sm text-gold">请在 MetaMask 里确认这一笔。四个英雄一起铸造，不会连弹四次。</p>
-          )}
-          {phase === 'pending' && <p className="mt-3 text-sm text-gold">交易已提交，正在等测试网确认…</p>}
-          {error && <p className="mt-3 text-sm text-cinnabar">{error}</p>}
+        {!wrongNetwork && !checking && !claimed && (
+          <div className="lobby-door">
+            <b>召旗</b>
+            <div>
+              <strong>{LORE.claimTitle}</strong>
+              <p className="mt-1 text-sm text-mute">{LORE.claimBody}</p>
+              {phase === 'wallet' && <p className="mt-2 text-sm text-gold">钱包里确认这一笔。四旗一起烙，不会连弹四次。</p>}
+              {phase === 'pending' && <p className="mt-2 text-sm text-gold">旗已投下，渊正在确认…</p>}
+              {error && <p className="mt-2 text-sm text-cinnabar">{error}</p>}
+              <button
+                type="button"
+                disabled={!canClaim}
+                onClick={() => void claim()}
+                className="btn-enter mt-4 !min-w-0 !px-6 !py-2 !text-lg"
+              >
+                {phase === 'wallet' || phase === 'pending' ? '等待烙印…' : '烙下四旗'}
+              </button>
+            </div>
+          </div>
+        )}
+
+        <div className="lobby-doors">
+          <button type="button" className="lobby-door" onClick={() => setScreen('library')}>
+            <b>01</b>
+            <div>
+              <strong>选将</strong>
+              <p className="mt-1 text-sm text-mute">从魂旗里点出战的那一面。</p>
+            </div>
+          </button>
           <button
             type="button"
-            disabled={!canClaim}
-            onClick={() => void claim()}
-            className="mt-4 rounded-full bg-gold px-5 py-2 text-sm font-medium text-ink"
+            className="lobby-door"
+            disabled={!claimed}
+            onClick={() => setScreen(selected ? 'combo' : 'library')}
           >
-            {phase === 'wallet' || phase === 'pending' ? '等待钱包…' : '领取四名英雄（1 笔）'}
+            <b>02</b>
+            <div>
+              <strong>编计</strong>
+              <p className="mt-1 text-sm text-mute">
+                {claimed
+                  ? selected
+                    ? `出战：${heroLore(selected.id).title}`
+                    : '先去选将。'
+                  : '四旗未烙，不能写计。'}
+              </p>
+            </div>
+          </button>
+          <button type="button" className="lobby-door" onClick={() => setScreen('ladder')}>
+            <b>03</b>
+            <div>
+              <strong>名册</strong>
+              <p className="mt-1 text-sm text-mute">上链之后，石阶才认你的名字。</p>
+            </div>
+          </button>
+          <button type="button" className="lobby-door" onClick={() => setScreen('market')}>
+            <b>04</b>
+            <div>
+              <strong>玉市</strong>
+              <p className="mt-1 text-sm text-mute">买别人写死的连环。买的是计，不是将。</p>
+            </div>
           </button>
         </div>
-      )}
-
-      <div className="grid gap-4 md:grid-cols-2">
-        <button
-          type="button"
-          onClick={() => setScreen('library')}
-          className="panel rounded-2xl p-6 text-left transition hover:border-gold-dim"
-        >
-          <div className="text-xs uppercase tracking-[0.25em] text-gold-dim">收藏</div>
-          <div className="font-display mt-2 text-2xl text-gold">我的英雄库</div>
-          <p className="mt-3 text-sm text-mute">查看属于你的全部英雄，选出战名单。</p>
-        </button>
-
-        <button
-          type="button"
-          disabled={!claimed}
-          onClick={() => setScreen(selected ? 'combo' : 'library')}
-          className="panel rounded-2xl p-6 text-left transition hover:border-gold-dim"
-        >
-          <div className="text-xs uppercase tracking-[0.25em] text-gold-dim">出战</div>
-          <div className="font-display mt-2 text-2xl">编连招</div>
-          <p className="mt-3 text-sm text-mute">
-            {claimed
-              ? selected
-                ? `当前出战：${selected.nameZh}`
-                : '先去英雄库选一个人。'
-              : '领取英雄后才能编招对战。'}
-          </p>
-        </button>
-
-        <button
-          type="button"
-          onClick={() => setScreen('ladder')}
-          className="panel rounded-2xl p-6 text-left transition hover:border-gold-dim"
-        >
-          <div className="text-xs uppercase tracking-[0.25em] text-gold-dim">排名</div>
-          <div className="font-display mt-2 text-2xl">天梯</div>
-          <p className="mt-3 text-sm text-mute">查看测试网上链后的积分榜。</p>
-        </button>
-
-        <button
-          type="button"
-          onClick={() => setScreen('market')}
-          className="panel rounded-2xl p-6 text-left transition hover:border-gold-dim"
-        >
-          <div className="text-xs uppercase tracking-[0.25em] text-gold-dim">交易</div>
-          <div className="font-display mt-2 text-2xl">连招市集</div>
-          <p className="mt-3 text-sm text-mute">买入别人挂出的 SkillCombo NFT，给对应英雄直接出战。</p>
-        </button>
       </div>
     </section>
   )

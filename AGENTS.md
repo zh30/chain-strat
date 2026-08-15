@@ -1,6 +1,6 @@
 # ChainStrat / 连环计
 
-Monad Testnet 上的 1v1 英雄连招对决。规则以 `docs/rules.md` 为准。
+Monad Testnet 上的 1v1 英雄连招对决。规则以 `docs/rules.md` 为准。世界观与登入语气以 `docs/lore.md` 为准。
 
 ## Commands
 
