@@ -1,0 +1,789 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>连环计 · 3 分钟讲解</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700&family=Noto+Sans+SC:wght@400;500;700&family=Noto+Serif+SC:wght@500;600&family=ZCOOL+XiaoWei&display=swap" rel="stylesheet">
+    <style>
+        /* ===========================================
+           THEME — 连环渊
+           Ink floor, gold type, one cinnabar spark.
+           Change :root to restyle the whole deck.
+           =========================================== */
+        :root {
+            --ink: #07080d;
+            --ink-2: #101218;
+            --paper: #efe6d2;
+            --mute: #8b8e99;
+            --gold: #e4c36a;
+            --gold-dim: #8a7340;
+            --cinnabar: #c23b3b;
+            --stage-bg: #05060a;
+            --slide-bg: #07080d;
+            --font-display: 'ZCOOL XiaoWei', 'Noto Serif SC', serif;
+            --font-body: 'Noto Sans SC', sans-serif;
+            --font-en: 'Cinzel', serif;
+            --title-size: 112px;
+            --subtitle-size: 34px;
+            --body-size: 32px;
+            --slide-padding: 88px;
+            --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+            --duration-normal: 0.7s;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        /* ===========================================
+           FIXED 16:9 STAGE: MANDATORY BASE STYLES
+           Include this ENTIRE file in every presentation.
+           Slides are authored at 1920×1080 and scaled as a whole.
+           =========================================== */
+
+        /* 1. Lock the browser viewport */
+        html,
+        body {
+            width: 100%;
+            height: 100%;
+            margin: 0;
+            overflow: hidden;
+            background: var(--stage-bg, #000);
+        }
+
+        /* 2. Full-window deck viewport */
+        .deck-viewport {
+            position: fixed;
+            inset: 0;
+            overflow: hidden;
+            background: var(--stage-bg, #000);
+        }
+
+        /* 3. Fixed 16:9 design canvas.
+           JavaScript sets transform: translate(...) scale(...). */
+        .deck-stage {
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 1920px;
+            height: 1080px;
+            overflow: hidden;
+            transform-origin: 0 0;
+            background: var(--slide-bg, #fff);
+        }
+
+        /* 4. Slides stack inside the fixed stage.
+           Content must be laid out at 1920×1080, not reflowed per device. */
+        .slide {
+            position: absolute;
+            inset: 0;
+            width: 1920px;
+            height: 1080px;
+            overflow: hidden;
+            display: block;
+            visibility: hidden;
+            opacity: 0;
+            pointer-events: none;
+            background: var(--slide-bg, #fff);
+        }
+
+        .slide.active,
+        .slide.visible {
+            visibility: visible;
+            opacity: 1;
+            pointer-events: auto;
+            z-index: 1;
+        }
+
+        /* 5. Keep media inside authored slide bounds */
+        img,
+        video,
+        canvas,
+        svg {
+            max-width: 100%;
+            max-height: 100%;
+        }
+
+        /* 6. Presentation chrome stays outside the slide design system */
+        .deck-controls {
+            position: fixed;
+            left: 50%;
+            bottom: 22px;
+            transform: translateX(-50%);
+            z-index: 1000;
+        }
+
+        /* 7. Print one fixed-size slide per page */
+        @media print {
+            html,
+            body {
+                width: 1920px;
+                height: auto;
+                overflow: visible;
+                background: #fff;
+            }
+
+            .deck-viewport {
+                position: static;
+                overflow: visible;
+                background: #fff;
+            }
+
+            .deck-stage {
+                position: static;
+                width: auto;
+                height: auto;
+                transform: none !important;
+                background: none;
+            }
+
+            .slide {
+                position: relative;
+                display: block !important;
+                visibility: visible !important;
+                opacity: 1 !important;
+                pointer-events: auto !important;
+                width: 1920px;
+                height: 1080px;
+                break-after: page;
+                page-break-after: always;
+            }
+
+            .slide:last-child {
+                break-after: auto;
+                page-break-after: auto;
+            }
+
+            .deck-controls {
+                display: none !important;
+            }
+        }
+
+        /* 8. Reduced motion */
+        @media (prefers-reduced-motion: reduce) {
+            *,
+            *::before,
+            *::after {
+                animation-duration: 0.01ms !important;
+                transition-duration: 0.2s !important;
+            }
+        }
+
+        /* ===========================================
+           SLIDE ATMOSPHERE
+           Gold + cinnabar mist, faint circuit grid.
+           =========================================== */
+        .slide {
+            color: var(--paper);
+            font-family: var(--font-body);
+            background:
+                radial-gradient(900px 420px at 78% 8%, rgba(194, 59, 59, 0.16), transparent 55%),
+                radial-gradient(800px 380px at 10% 88%, rgba(228, 195, 106, 0.10), transparent 50%),
+                var(--ink);
+        }
+
+        .slide::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            pointer-events: none;
+            opacity: 0.22;
+            background-image:
+                linear-gradient(rgba(228, 195, 106, 0.06) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(228, 195, 106, 0.06) 1px, transparent 1px);
+            background-size: 64px 64px;
+        }
+
+        .gold-rule {
+            width: 120px;
+            height: 1px;
+            background: linear-gradient(90deg, var(--gold), transparent);
+        }
+
+        .kicker {
+            font-family: var(--font-en);
+            font-size: 16px;
+            letter-spacing: 0.42em;
+            color: var(--gold);
+            text-transform: uppercase;
+        }
+
+        .zh-title {
+            font-family: var(--font-display);
+            font-weight: 400;
+            color: var(--gold);
+            letter-spacing: 0.12em;
+            line-height: 1.1;
+        }
+
+        .plain {
+            font-size: var(--body-size);
+            line-height: 1.55;
+            color: var(--paper);
+            font-weight: 400;
+            max-width: 1400px;
+        }
+
+        .mute {
+            color: var(--mute);
+        }
+
+        /* ===========================================
+           ENTRANCES
+           =========================================== */
+        .reveal {
+            opacity: 0;
+            transform: translateY(28px);
+            transition: opacity var(--duration-normal) var(--ease-out-expo),
+                        transform var(--duration-normal) var(--ease-out-expo);
+        }
+
+        .slide.visible .reveal {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .slide.visible .reveal:nth-child(1) { transition-delay: 0.08s; }
+        .slide.visible .reveal:nth-child(2) { transition-delay: 0.18s; }
+        .slide.visible .reveal:nth-child(3) { transition-delay: 0.28s; }
+        .slide.visible .reveal:nth-child(4) { transition-delay: 0.38s; }
+        .slide.visible .reveal:nth-child(5) { transition-delay: 0.48s; }
+        .slide.visible .reveal:nth-child(6) { transition-delay: 0.58s; }
+
+        /* ===========================================
+           SLIDE 1 — TITLE
+           Full-bleed promo with a dark veil.
+           =========================================== */
+        .title-slide {
+            background: #05060a;
+        }
+
+        .title-slide .hero-art {
+            position: absolute;
+            inset: 0;
+            width: 1920px;
+            height: 1080px;
+            max-width: none;
+            max-height: none;
+            object-fit: cover;
+        }
+
+        .title-slide .veil {
+            position: absolute;
+            inset: 0;
+            background:
+                linear-gradient(180deg, rgba(5, 6, 10, 0.55) 0%, rgba(5, 6, 10, 0.12) 38%, rgba(5, 6, 10, 0.78) 100%);
+        }
+
+        .title-copy {
+            position: absolute;
+            left: 100px;
+            right: 100px;
+            bottom: 92px;
+            z-index: 2;
+        }
+
+        .title-copy h1 {
+            font-size: 132px;
+            margin: 16px 0 12px;
+        }
+
+        .title-copy .tag {
+            font-family: 'Noto Serif SC', 'Noto Sans SC', serif;
+            font-size: 34px;
+            color: var(--paper);
+            letter-spacing: 0.06em;
+            font-weight: 500;
+        }
+
+        .title-copy .meta {
+            margin-top: 22px;
+            font-size: 20px;
+            color: var(--mute);
+            letter-spacing: 0.08em;
+        }
+
+        /* ===========================================
+           INNER SLIDES
+           =========================================== */
+        .pad {
+            position: relative;
+            z-index: 2;
+            height: 1080px;
+            padding: 96px 110px 88px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .pad h2.zh-title {
+            font-size: 84px;
+            margin: 18px 0 36px;
+        }
+
+        .big-line {
+            font-family: 'Noto Serif SC', 'Noto Sans SC', serif;
+            font-size: 62px;
+            line-height: 1.42;
+            color: var(--paper);
+            letter-spacing: 0.02em;
+            font-weight: 500;
+        }
+
+        .big-line em {
+            font-style: normal;
+            color: var(--gold);
+        }
+
+        /* Three steps */
+        .steps {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 36px;
+            margin-top: 20px;
+        }
+
+        .step {
+            border: 1px solid rgba(228, 195, 106, 0.22);
+            background: rgba(16, 18, 24, 0.55);
+            padding: 40px 36px 44px;
+            min-height: 420px;
+        }
+
+        .step .num {
+            font-family: var(--font-en);
+            font-size: 18px;
+            letter-spacing: 0.28em;
+            color: var(--gold);
+            margin-bottom: 28px;
+        }
+
+        .step h3 {
+            font-family: var(--font-display);
+            font-size: 56px;
+            color: var(--paper);
+            margin-bottom: 20px;
+            letter-spacing: 0.06em;
+        }
+
+        .step p {
+            font-size: 26px;
+            line-height: 1.55;
+            color: var(--mute);
+        }
+
+        /* Three differences */
+        .diffs {
+            display: flex;
+            flex-direction: column;
+            gap: 28px;
+            margin-top: 8px;
+        }
+
+        .diff {
+            display: grid;
+            grid-template-columns: 220px 1fr;
+            gap: 28px;
+            align-items: baseline;
+            padding: 26px 0;
+            border-bottom: 1px solid rgba(228, 195, 106, 0.18);
+        }
+
+        .diff .label {
+            font-family: var(--font-display);
+            font-size: 40px;
+            color: var(--gold);
+            letter-spacing: 0.12em;
+        }
+
+        .diff .say {
+            font-size: 36px;
+            line-height: 1.45;
+            color: var(--paper);
+        }
+
+        /* Demo close */
+        .demo-url {
+            font-family: var(--font-en);
+            font-size: 42px;
+            color: var(--gold);
+            letter-spacing: 0.12em;
+            margin-top: 28px;
+        }
+
+        .hint {
+            margin-top: auto;
+            font-size: 20px;
+            color: var(--mute);
+            letter-spacing: 0.08em;
+        }
+
+        /* ===========================================
+           CHROME (outside the 16:9 design)
+           =========================================== */
+        .deck-controls {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            color: #8b8e99;
+            font-family: 'Noto Sans SC', sans-serif;
+            font-size: 13px;
+            letter-spacing: 0.12em;
+            background: rgba(7, 8, 13, 0.72);
+            border: 1px solid rgba(228, 195, 106, 0.2);
+            padding: 8px 14px;
+            backdrop-filter: blur(8px);
+        }
+
+        .deck-controls .dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: #e4c36a;
+        }
+
+        .notes-panel {
+            position: fixed;
+            left: 24px;
+            right: 24px;
+            bottom: 70px;
+            z-index: 1100;
+            display: none;
+            background: rgba(7, 8, 13, 0.92);
+            color: #efe6d2;
+            border: 1px solid rgba(228, 195, 106, 0.28);
+            padding: 16px 22px;
+            font-family: 'Noto Sans SC', sans-serif;
+            font-size: 18px;
+            line-height: 1.5;
+            max-width: 980px;
+            margin: 0 auto;
+        }
+
+        .notes-panel.show { display: block; }
+        .notes-panel strong { color: #e4c36a; font-weight: 500; }
+
+        /* Inline edit toggle — visibility via JS only */
+        .edit-hotzone {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 80px;
+            height: 80px;
+            z-index: 10000;
+            cursor: pointer;
+        }
+
+        .edit-toggle {
+            position: fixed;
+            top: 16px;
+            left: 16px;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+            z-index: 10001;
+            background: #e4c36a;
+            color: #07080d;
+            border: 0;
+            padding: 8px 12px;
+            font-family: 'Noto Sans SC', sans-serif;
+            font-size: 13px;
+            cursor: pointer;
+        }
+
+        .edit-toggle.show,
+        .edit-toggle.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        [contenteditable="true"] {
+            outline: 1px dashed rgba(228, 195, 106, 0.5);
+            outline-offset: 4px;
+        }
+    </style>
+</head>
+<body>
+    <div class="deck-viewport">
+        <main class="deck-stage" id="deckStage">
+
+            <!-- ===========================================
+                 SLIDE 1 / 6  封面
+                 讲：大家好，这是连环计。先把杀招写死，再把人放进去。
+                 =========================================== -->
+            <section class="slide title-slide active" data-notes="大家好，这是连环计。一句话记住：先把杀招写死，再把人放进去。开打之后不能再动手。">
+                <img class="hero-art" src="assets/keyart.jpg" alt="连环计：铁卫对夜裁">
+                <div class="veil"></div>
+                <div class="title-copy">
+                    <p class="kicker reveal">CHAINSTRAT</p>
+                    <h1 class="zh-title reveal">连环计</h1>
+                    <p class="tag reveal">先把杀招写死，再把人放进去</p>
+                    <p class="meta reveal">Monad 上的 1v1 英雄连招对决 · Henry Zhang</p>
+                </div>
+            </section>
+
+            <!-- ===========================================
+                 SLIDE 2 / 6  这是什么
+                 讲：不是拼手速。你先想好，锁死，然后看两套计对撞。
+                 =========================================== -->
+            <section class="slide" data-notes="这不是王者那种临场点技能。你先把连招想好、锁死。开打之后，谁也不能再动手。两套计当场对撞。">
+                <div class="pad">
+                    <p class="kicker reveal">01 · 这是什么</p>
+                    <h2 class="zh-title reveal">不是拼手速</h2>
+                    <p class="big-line reveal">你先把连招写好。<br>开打之后，<em>谁也不能再动手</em>。<br>两套计，当场对撞。</p>
+                    <p class="hint reveal">正规打 60 秒。打平了就加时，谁先掉血谁输。</p>
+                </div>
+            </section>
+
+            <!-- ===========================================
+                 SLIDE 3 / 6  怎么玩
+                 讲：三步。领英雄、编连招、看对战。
+                 =========================================== -->
+            <section class="slide" data-notes="三步就能玩。连钱包，一笔领四个免费英雄。花最多六十秒把技能排好。然后匹配，自己只准看。">
+                <div class="pad">
+                    <p class="kicker reveal">02 · 怎么玩</p>
+                    <h2 class="zh-title reveal">三步</h2>
+                    <div class="steps">
+                        <article class="step reveal">
+                            <p class="num">01</p>
+                            <h3>领英雄</h3>
+                            <p>连上钱包，一笔领四个免费英雄。锁在你身上，转不走。</p>
+                        </article>
+                        <article class="step reveal">
+                            <p class="num">02</p>
+                            <h3>编连招</h3>
+                            <p>六十秒里把技能排好。空等也算时间。写不进钟的招，进不了场。</p>
+                        </article>
+                        <article class="step reveal">
+                            <p class="num">03</p>
+                            <h3>看对战</h3>
+                            <p>匹配之后只准看。计锁死了，胜负只认事先写好的那一套。</p>
+                        </article>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ===========================================
+                 SLIDE 4 / 6  特别在哪
+                 讲：英雄卖不掉，连招能卖，分数不能自己报。
+                 =========================================== -->
+            <section class="slide" data-notes="三件和别的链游不一样的事。英雄锁死，卖不掉。连招可以铸成 NFT 卖掉。分数要权威签字才写上链，玩家不能自己报分。">
+                <div class="pad">
+                    <p class="kicker reveal">03 · 特别在哪</p>
+                    <h2 class="zh-title reveal">三件不一样的事</h2>
+                    <div class="diffs">
+                        <div class="diff reveal">
+                            <p class="label">英雄</p>
+                            <p class="say">锁在你身上。卖不掉。渊不信任把将卖掉的人。</p>
+                        </div>
+                        <div class="diff reveal">
+                            <p class="label">连招</p>
+                            <p class="say">可以铸成 NFT，挂到市上卖掉。将还是你的，计可以属于别人。</p>
+                        </div>
+                        <div class="diff reveal">
+                            <p class="label">分数</p>
+                            <p class="say">写在链上。不是自己报分，要权威签过字才认。</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ===========================================
+                 SLIDE 5 / 6  为什么 Monad
+                 讲：这些动作会反复发生，Monad 又快又便宜。
+                 =========================================== -->
+            <section class="slide" data-notes="领将、记分、买卖连招，会反复发生。慢链或贵链会把游戏卡死。Monad 又快又便宜，这些动作才像点按钮，不像等区块。">
+                <div class="pad">
+                    <p class="kicker reveal">04 · 为什么在 Monad</p>
+                    <h2 class="zh-title reveal">这些动作会反复发生</h2>
+                    <p class="big-line reveal">领将、记分、买卖连招。<br>Monad <em>又快又便宜</em>，<br>才能当成普通按钮来按。</p>
+                    <p class="hint reveal">战斗本身不上链。链只认三件事：人、计、分。</p>
+                </div>
+            </section>
+
+            <!-- ===========================================
+                 SLIDE 6 / 6  演示
+                 讲：现在打开网站，打一场给大家看。
+                 =========================================== -->
+            <section class="slide" data-notes="现在打开网站。连钱包，领将，一键随机连招，走人机打一场。看完把战报写上链。">
+                <div class="pad">
+                    <p class="kicker reveal">05 · 现在演示</p>
+                    <h2 class="zh-title reveal">打开就能打</h2>
+                    <p class="big-line reveal">连钱包。领将。编计。看打。</p>
+                    <p class="demo-url reveal">chainstrat.zhanghe.dev</p>
+                    <p class="hint reveal">切到 Monad 测试网。单人演示请选人机对战。</p>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <div class="deck-controls" id="deckControls" aria-live="polite">
+        <span class="dot"></span>
+        <span id="pageLabel">1 / 6</span>
+        <span>← → 翻页 · S 讲稿</span>
+    </div>
+
+    <div class="notes-panel" id="notesPanel"></div>
+
+    <div class="edit-hotzone"></div>
+    <button class="edit-toggle" id="editToggle" title="Edit mode (E)">编辑</button>
+
+    <script>
+        /* ===========================================
+           SLIDE PRESENTATION CONTROLLER
+           Arrow / Space / Page / wheel / swipe.
+           =========================================== */
+        class SlidePresentation {
+            constructor() {
+                this.slides = document.querySelectorAll('.slide');
+                this.currentSlide = 0;
+                this.stage = document.getElementById('deckStage');
+                this.pageLabel = document.getElementById('pageLabel');
+                this.notesPanel = document.getElementById('notesPanel');
+                this.notesOn = false;
+                this.touchStartX = null;
+                this.setupStageScale();
+                this.setupKeyboardNav();
+                this.setupTouchNav();
+                this.setupWheelNav();
+                const fromHash = parseInt((location.hash || '').replace('#', ''), 10);
+                this.showSlide(Number.isFinite(fromHash) && fromHash > 0 ? fromHash - 1 : 0);
+            }
+
+            setupStageScale() {
+                const scale = () => {
+                    const factor = Math.min(window.innerWidth / 1920, window.innerHeight / 1080);
+                    const x = (window.innerWidth - 1920 * factor) / 2;
+                    const y = (window.innerHeight - 1080 * factor) / 2;
+                    this.stage.style.transform = `translate(${x}px, ${y}px) scale(${factor})`;
+                };
+                scale();
+                window.addEventListener('resize', scale);
+            }
+
+            setupKeyboardNav() {
+                document.addEventListener('keydown', (e) => {
+                    if (e.target.getAttribute('contenteditable') === 'true') return;
+                    if (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'PageDown') {
+                        e.preventDefault();
+                        this.showSlide(this.currentSlide + 1);
+                    } else if (e.key === 'ArrowLeft' || e.key === 'PageUp' || e.key === 'Backspace') {
+                        e.preventDefault();
+                        this.showSlide(this.currentSlide - 1);
+                    } else if (e.key === 'Home') {
+                        this.showSlide(0);
+                    } else if (e.key === 'End') {
+                        this.showSlide(this.slides.length - 1);
+                    } else if (e.key === 's' || e.key === 'S') {
+                        this.notesOn = !this.notesOn;
+                        this.renderNotes();
+                    }
+                });
+            }
+
+            setupTouchNav() {
+                document.addEventListener('touchstart', (e) => {
+                    this.touchStartX = e.changedTouches[0].screenX;
+                }, { passive: true });
+                document.addEventListener('touchend', (e) => {
+                    if (this.touchStartX == null) return;
+                    const dx = e.changedTouches[0].screenX - this.touchStartX;
+                    if (dx < -50) this.showSlide(this.currentSlide + 1);
+                    if (dx > 50) this.showSlide(this.currentSlide - 1);
+                    this.touchStartX = null;
+                }, { passive: true });
+            }
+
+            setupWheelNav() {
+                let locked = false;
+                window.addEventListener('wheel', (e) => {
+                    if (locked) return;
+                    if (Math.abs(e.deltaY) < 20) return;
+                    locked = true;
+                    this.showSlide(this.currentSlide + (e.deltaY > 0 ? 1 : -1));
+                    setTimeout(() => { locked = false; }, 700);
+                }, { passive: true });
+            }
+
+            showSlide(index) {
+                this.currentSlide = Math.max(0, Math.min(index, this.slides.length - 1));
+                this.slides.forEach((slide, i) => {
+                    slide.classList.toggle('active', i === this.currentSlide);
+                    slide.classList.toggle('visible', i === this.currentSlide);
+                });
+                this.pageLabel.textContent = `${this.currentSlide + 1} / ${this.slides.length}`;
+                if (location.hash !== `#${this.currentSlide + 1}`) {
+                    history.replaceState(null, '', `#${this.currentSlide + 1}`);
+                }
+                this.renderNotes();
+            }
+
+            renderNotes() {
+                const note = this.slides[this.currentSlide].dataset.notes || '';
+                this.notesPanel.classList.toggle('show', this.notesOn);
+                this.notesPanel.innerHTML = `<strong>这一页讲：</strong>${note}`;
+            }
+        }
+
+        const deck = new SlidePresentation();
+
+        /* ===========================================
+           INLINE EDITING
+           Hover top-left or press E. Click text. Ctrl/Cmd+S saves.
+           =========================================== */
+        const editor = {
+            isActive: false,
+            key: 'chainstrat-slides-v1',
+            toggleEditMode() {
+                this.isActive = !this.isActive;
+                document.getElementById('editToggle').classList.toggle('active', this.isActive);
+                document.querySelectorAll('h1, h2, h3, p, .say, .tag, .meta, .demo-url').forEach((el) => {
+                    el.setAttribute('contenteditable', this.isActive ? 'true' : 'false');
+                });
+            },
+            save() {
+                localStorage.setItem(this.key, document.getElementById('deckStage').innerHTML);
+            },
+            restore() {
+                const html = localStorage.getItem(this.key);
+                if (html) document.getElementById('deckStage').innerHTML = html;
+            }
+        };
+
+        editor.restore();
+        deck.slides = document.querySelectorAll('.slide');
+        const bootHash = parseInt((location.hash || '').replace('#', ''), 10);
+        deck.showSlide(Number.isFinite(bootHash) && bootHash > 0 ? bootHash - 1 : 0);
+
+        document.getElementById('editToggle').addEventListener('click', () => editor.toggleEditMode());
+
+        const hotzone = document.querySelector('.edit-hotzone');
+        const editToggle = document.getElementById('editToggle');
+        let hideTimeout = null;
+        const showBtn = () => {
+            clearTimeout(hideTimeout);
+            editToggle.classList.add('show');
+        };
+        const hideBtn = () => {
+            hideTimeout = setTimeout(() => {
+                if (!editor.isActive) editToggle.classList.remove('show');
+            }, 400);
+        };
+        hotzone.addEventListener('mouseenter', showBtn);
+        hotzone.addEventListener('mouseleave', hideBtn);
+        editToggle.addEventListener('mouseenter', showBtn);
+        editToggle.addEventListener('mouseleave', hideBtn);
+        hotzone.addEventListener('click', () => editor.toggleEditMode());
+
+        document.addEventListener('keydown', (e) => {
+            if ((e.key === 'e' || e.key === 'E') && !e.target.getAttribute('contenteditable')) {
+                editor.toggleEditMode();
+            }
+            if ((e.metaKey || e.ctrlKey) && e.key === 's') {
+                e.preventDefault();
+                editor.save();
+            }
+        });
+    </script>
+</body>
+</html>

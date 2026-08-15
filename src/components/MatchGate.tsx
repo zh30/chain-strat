@@ -28,7 +28,7 @@ export function MatchGate() {
             : '按名册远近配对。二十息内无人，则派出影旗。'
 
   return (
-    <section className="relative -mx-4 flex min-h-[70vh] flex-col items-center justify-center overflow-hidden px-4">
+    <section className="relative flex h-full min-h-0 flex-col items-center justify-center overflow-hidden">
       <div
         className={`pointer-events-none absolute inset-0 ${
           critical

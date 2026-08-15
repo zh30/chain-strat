@@ -2,6 +2,8 @@ import type { HeroId } from './types'
 
 export const ARENA_ART = '/assets/arena/coliseum.jpg'
 
+export type HeroPose = 'stance' | 'strike' | 'hurt' | 'cast'
+
 export const HERO_ART: Record<HeroId, string> = {
   warrior: '/assets/heroes/warrior.jpg',
   mage: '/assets/heroes/mage.jpg',
@@ -10,6 +12,48 @@ export const HERO_ART: Record<HeroId, string> = {
   guardian: '/assets/heroes/guardian.jpg',
   necromancer: '/assets/heroes/necromancer.jpg',
   blademaster: '/assets/heroes/blademaster.jpg',
+}
+
+export const HERO_POSES: Record<HeroId, Partial<Record<HeroPose, string>>> = {
+  warrior: {
+    stance: '/assets/heroes/warrior-stance.png',
+    strike: '/assets/heroes/warrior-strike.png',
+    hurt: '/assets/heroes/warrior-hurt.png',
+    cast: '/assets/heroes/warrior-cast.png',
+  },
+  mage: {
+    stance: '/assets/heroes/mage-stance.png',
+    strike: '/assets/heroes/mage-strike.png',
+    hurt: '/assets/heroes/mage-hurt.png',
+    cast: '/assets/heroes/mage-cast.png',
+  },
+  assassin: {
+    stance: '/assets/heroes/assassin-stance.png',
+    strike: '/assets/heroes/assassin-strike.png',
+    hurt: '/assets/heroes/assassin-hurt.png',
+    cast: '/assets/heroes/assassin-cast.png',
+  },
+  ranger: {
+    stance: '/assets/heroes/ranger-stance.png',
+    strike: '/assets/heroes/ranger-strike.png',
+    hurt: '/assets/heroes/ranger-hurt.png',
+    cast: '/assets/heroes/ranger-cast.png',
+  },
+  guardian: {
+    stance: '/assets/heroes/guardian-stance.png',
+    strike: '/assets/heroes/guardian-strike.png',
+    hurt: '/assets/heroes/guardian-hurt.png',
+  },
+  necromancer: {
+    stance: '/assets/heroes/necromancer-stance.png',
+    strike: '/assets/heroes/necromancer-strike.png',
+    hurt: '/assets/heroes/necromancer-hurt.png',
+  },
+  blademaster: {
+    stance: '/assets/heroes/blademaster-stance.png',
+    strike: '/assets/heroes/blademaster-strike.png',
+    hurt: '/assets/heroes/blademaster-hurt.png',
+  },
 }
 
 export interface SkillLook {

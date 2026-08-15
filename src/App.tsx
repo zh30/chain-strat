@@ -1,6 +1,7 @@
 import { useEffect } from 'react'
 import { useAccount } from 'wagmi'
 import { BattleView } from './components/BattleView'
+import { DemoBattle, isDemoBattleRequest } from './components/DemoBattle'
 import { ComboBuilder } from './components/ComboBuilder'
 import { ComboMarket } from './components/ComboMarket'
 import { GameHud } from './components/GameHud'
@@ -26,12 +27,14 @@ export default function App() {
   const installApi = usePwaInstall()
 
   useEffect(() => {
+    if (isDemoBattleRequest()) return
     if (!checking && !claimed && PLAY_SCREENS.has(screen)) {
       setScreen('hall')
     }
   }, [claimed, checking, screen, setScreen])
 
   useEffect(() => {
+    if (isDemoBattleRequest()) return
     const next = pathForScreen(screen)
     if (!next) return
     const url = new URL(next, window.location.origin)
@@ -39,6 +42,8 @@ export default function App() {
     const desired = `${url.pathname}${url.search}`
     if (current !== desired) window.history.replaceState(null, '', desired)
   }, [screen])
+
+  if (isDemoBattleRequest()) return <DemoBattle />
 
   if (!isConnected) {
     return (

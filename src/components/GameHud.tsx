@@ -22,7 +22,6 @@ export function GameHud({
 }) {
   const screen = useGame((s) => s.screen)
   const setScreen = useGame((s) => s.setScreen)
-  const heroId = useGame((s) => s.heroId)
 
   return (
     <header className="hud">
@@ -39,8 +38,7 @@ export function GameHud({
             key={tab.id}
             type="button"
             className={screen === tab.id ? 'is-on' : ''}
-            disabled={tab.id === 'combo' && !heroId}
-            onClick={() => setScreen(tab.id === 'combo' && !heroId ? 'library' : tab.id)}
+            onClick={() => setScreen(tab.id)}
           >
             {tab.label}
           </button>

@@ -6,11 +6,14 @@ import { BattleScene } from './BattleScene'
 interface Props {
   payload: MatchPayload
   onComplete: () => void
+  youAddress?: string | null
 }
 
-export function PhaserGame({ payload, onComplete }: Props) {
+export function PhaserGame({ payload, onComplete, youAddress }: Props) {
   const host = useRef<HTMLDivElement>(null)
   const gameRef = useRef<Phaser.Game | null>(null)
+  const onCompleteRef = useRef(onComplete)
+  onCompleteRef.current = onComplete
 
   useEffect(() => {
     if (!host.current) return
@@ -23,13 +26,17 @@ export function PhaserGame({ payload, onComplete }: Props) {
       scene: [],
       scale: { mode: Phaser.Scale.FIT, autoCenter: Phaser.Scale.CENTER_BOTH },
     })
-    game.scene.add('battle', BattleScene, true, { payload, onComplete })
+    game.scene.add('battle', BattleScene, true, {
+      payload,
+      youAddress: youAddress ?? null,
+      onComplete: () => onCompleteRef.current(),
+    })
     gameRef.current = game
     return () => {
       game.destroy(true)
       gameRef.current = null
     }
-  }, [payload, onComplete])
+  }, [payload])
 
   return <div ref={host} className="panel overflow-hidden rounded-2xl" />
 }

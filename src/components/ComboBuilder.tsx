@@ -1,10 +1,13 @@
 import { useState } from 'react'
 import { PhaserPreview } from '../game/PhaserPreview'
 import { ComboShelf } from './ComboShelf'
+import { HeroCard3D } from './HeroCard3D'
 import { generateAutoCombo, planCombo } from '../lib/combo'
 import { comboContractReady, useComboNft } from '../hooks/useComboNft'
+import { useOwnedHeroes } from '../hooks/useOwnedHeroes'
 import { comboFromOnchain, comboIsLegal } from '../lib/comboNft'
 import { getHero } from '../lib/heroes'
+import { heroLore } from '../lib/lore'
 import { useOnline } from '../hooks/useOnline'
 import { useStarterPack } from '../hooks/useStarterPack'
 import { COMBO_MAX_SEC } from '../lib/types'
@@ -16,9 +19,12 @@ export function ComboBuilder() {
   const setCombo = useGame((s) => s.setCombo)
   const loadComboNft = useGame((s) => s.loadComboNft)
   const comboTokenId = useGame((s) => s.comboTokenId)
+  const setHero = useGame((s) => s.setHero)
+  const clearHero = useGame((s) => s.clearHero)
   const setScreen = useGame((s) => s.setScreen)
   const startMatch = useGame((s) => s.startMatch)
   const { claimed } = useStarterPack()
+  const { heroes, loading } = useOwnedHeroes()
   const online = useOnline()
   const hero = heroId ? getHero(heroId) : null
   const combos = useComboNft(hero?.typeId)
@@ -30,15 +36,44 @@ export function ComboBuilder() {
 
   if (!hero) {
     return (
-      <section className="panel mx-auto max-w-lg rounded-2xl p-8 text-center">
-        <p className="text-mute">还没选出战英雄。</p>
-        <button
-          type="button"
-          className="mt-4 rounded-full bg-gold px-6 py-2 text-sm font-medium text-ink"
-          onClick={() => setScreen('library')}
-        >
-          去选将
-        </button>
+      <section>
+        <div className="mb-6 flex items-end justify-between gap-4">
+          <div>
+            <p className="page-kicker">编计</p>
+            <h2 className="font-display text-4xl text-gold">先点出战的旗</h2>
+            <p className="mt-1 text-sm text-mute">将未定，计不能写。点一面魂旗，才能排连环。</p>
+          </div>
+          <button type="button" className="text-sm tracking-[0.2em] text-mute" onClick={() => setScreen('hall')}>
+            回策场
+          </button>
+        </div>
+
+        {loading && <p className="text-sm text-mute">渊正在认你的旗…</p>}
+
+        {!loading && !claimed && (
+          <div className="lobby-door">
+            <b>召旗</b>
+            <div>
+              <strong>四旗未烙</strong>
+              <p className="mt-1 text-sm text-mute">回策场先把先锋四旗烙进名字，再来写计。</p>
+              <button type="button" className="btn-enter mt-4 !min-w-0 !px-6 !py-2 !text-lg" onClick={() => setScreen('hall')}>
+                回策场召旗
+              </button>
+            </div>
+          </div>
+        )}
+
+        {!loading && claimed && heroes.length === 0 && (
+          <p className="text-sm text-mute">链上还没读到魂旗，稍后再开编计。</p>
+        )}
+
+        {!loading && heroes.length > 0 && (
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            {heroes.map((owned) => (
+              <HeroCard3D key={owned.id} hero={owned} active={false} onSelect={() => setHero(owned.id)} />
+            ))}
+          </div>
+        )}
       </section>
     )
   }
@@ -56,10 +91,10 @@ export function ComboBuilder() {
       <div className="panel rounded-2xl p-6">
         <div className="flex items-center justify-between">
           <h2 className="font-display text-2xl text-gold">
-            {hero.nameZh} · 编计
+            {heroLore(hero.id).title} · 编计
           </h2>
-          <button type="button" className="text-sm text-mute" onClick={() => setScreen('library')}>
-            选将
+          <button type="button" className="text-sm tracking-[0.2em] text-mute" onClick={clearHero}>
+            换将
           </button>
         </div>
         <div className="mt-4">

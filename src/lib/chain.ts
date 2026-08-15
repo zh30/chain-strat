@@ -55,6 +55,13 @@ export function shortAddress(addr: string): string {
   return `${addr.slice(0, 6)}…${addr.slice(-4)}`
 }
 
+export function fighterTag(addr: string, you?: string | null): string {
+  if (isZeroAddress(addr)) return '人机'
+  const short = shortAddress(addr)
+  if (you && addr.toLowerCase() === you.toLowerCase()) return `${short} · 你`
+  return short
+}
+
 export const DEFAULT_RATING = 1000
 export const RATING_FLOOR = 100
 export const ELO_K_PVP = 32

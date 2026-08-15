@@ -13,6 +13,7 @@ interface GameStore {
   matchMode: 'pvp' | 'bot'
   setScreen: (screen: Screen) => void
   setHero: (heroId: HeroId) => void
+  clearHero: () => void
   setCombo: (combo: string[]) => void
   loadComboNft: (heroId: HeroId, combo: string[], tokenId: bigint) => void
   startMatch: (mode: 'pvp' | 'bot') => void
@@ -37,6 +38,7 @@ export const useGame = create<GameStore>((set) => ({
     set((state) =>
       state.heroId === heroId ? { heroId } : { heroId, combo: [], comboTokenId: null },
     ),
+  clearHero: () => set({ heroId: null, combo: [], comboTokenId: null }),
   setCombo: (combo) => set({ combo, comboTokenId: null }),
   loadComboNft: (heroId, combo, tokenId) => set({ heroId, combo, comboTokenId: tokenId }),
   startMatch: (mode) => set({ matchMode: mode, screen: 'match' }),

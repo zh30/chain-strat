@@ -31,8 +31,9 @@ export class PreviewScene extends Phaser.Scene {
       this.cameras.main.setBackgroundColor('#07080d')
     }
     this.add.rectangle(w / 2, h * 0.82, w, 80, 0x000000, 0.35)
-    this.actor = new HeroActor(this, w * 0.38, h * 0.58, this.heroId, 1)
-    this.add.circle(w * 0.72, h * 0.58, 18, 0x2a2d38, 0.8)
+    this.actor = new HeroActor(this, w * 0.36, h * 0.6, this.heroId, 1)
+    this.add.circle(w * 0.74, h * 0.58, 22, 0x2a2d38, 0.85)
+    this.add.circle(w * 0.74, h * 0.58, 8, 0xc23b3b, 0.9)
     this.caption = this.add
       .text(w / 2, 22, '点选技能，预览动作', {
         fontFamily: 'Noto Serif SC',

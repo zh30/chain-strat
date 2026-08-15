@@ -1,7 +1,7 @@
 import { useStarterPack } from '../hooks/useStarterPack'
 import { getHero } from '../lib/heroes'
 import { LORE, heroLore } from '../lib/lore'
-import { ARENA_ART, HERO_ART } from '../lib/visuals'
+import { ARENA_ART, HERO_ART, HERO_POSES } from '../lib/visuals'
 import { useGame } from '../store'
 
 export function Hall() {
@@ -9,12 +9,12 @@ export function Hall() {
   const setScreen = useGame((s) => s.setScreen)
   const { claimed, checking, phase, error, wrongNetwork, canClaim, claim } = useStarterPack()
   const selected = claimed && heroId ? getHero(heroId) : null
-  const art = selected ? HERO_ART[selected.id] : ARENA_ART
+  const art = selected ? (HERO_POSES[selected.id].stance ?? HERO_ART[selected.id]) : ARENA_ART
   const lore = selected ? heroLore(selected.id) : null
 
   return (
     <section className="lobby">
-      <div className="lobby-hero">
+      <div className={`lobby-hero ${selected ? 'has-fighter' : ''}`}>
         <img src={art} alt="" />
         <div className="lobby-hero-copy">
           <span className="page-kicker">连环渊</span>
@@ -25,7 +25,7 @@ export function Hall() {
         </div>
       </div>
 
-      <div className="flex flex-col gap-3">
+      <div className="lobby-side">
         {wrongNetwork && (
           <div className="lobby-door border-cinnabar/50">
             <b>断线</b>
@@ -71,7 +71,7 @@ export function Hall() {
             type="button"
             className="lobby-door"
             disabled={!claimed}
-            onClick={() => setScreen(selected ? 'combo' : 'library')}
+            onClick={() => setScreen('combo')}
           >
             <b>02</b>
             <div>
@@ -80,7 +80,7 @@ export function Hall() {
                 {claimed
                   ? selected
                     ? `出战：${heroLore(selected.id).title}`
-                    : '先去选将。'
+                    : '先进编计，点出战的那一面旗。'
                   : '四旗未烙，不能写计。'}
               </p>
             </div>

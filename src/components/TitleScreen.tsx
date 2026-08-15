@@ -2,7 +2,7 @@ import { useConnectModal } from '@rainbow-me/rainbowkit'
 import { useEffect, useState } from 'react'
 import { FREE_HEROES } from '../lib/heroes'
 import { LORE, heroLore } from '../lib/lore'
-import { ARENA_ART, HERO_ART } from '../lib/visuals'
+import { ARENA_ART, HERO_ART, HERO_POSES } from '../lib/visuals'
 
 export function TitleScreen() {
   const { openConnectModal } = useConnectModal()
@@ -27,7 +27,7 @@ export function TitleScreen() {
 
       <img
         key={featured.id}
-        src={HERO_ART[featured.id]}
+        src={HERO_POSES[featured.id].stance ?? HERO_ART[featured.id]}
         alt=""
         className="title-hero"
       />
@@ -35,7 +35,11 @@ export function TitleScreen() {
       <div className="title-copy">
         <p className="title-kicker">策都 · 连环渊</p>
         <h1 className="title-word">{LORE.title}</h1>
-        <p className="title-hook">{LORE.hook}</p>
+        <p className="title-hook">
+          先把杀招写死，
+          <br />
+          再把人放进去。
+        </p>
         <p className="title-sub">{LORE.sub}</p>
         <button type="button" className="btn-enter" onClick={() => openConnectModal?.()}>
           {LORE.enter}
@@ -51,7 +55,7 @@ export function TitleScreen() {
             className={`title-chip ${index === focus ? 'is-on' : ''}`}
             onClick={() => setFocus(index)}
           >
-            <img src={HERO_ART[hero.id]} alt="" />
+            <img src={HERO_POSES[hero.id].stance ?? HERO_ART[hero.id]} alt="" />
             <span>
               <strong>{heroLore(hero.id).title}</strong>
               <em>{heroLore(hero.id).epithet}</em>

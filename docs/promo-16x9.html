@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <title>连环计 · ChainStrat</title>
+  <style>
+    html, body {
+      margin: 0;
+      width: 1920px;
+      height: 1080px;
+      overflow: hidden;
+      background: #05060a;
+    }
+    .frame {
+      position: relative;
+      width: 1920px;
+      height: 1080px;
+    }
+    .art {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    .veil {
+      position: absolute;
+      inset: 0;
+      background:
+        linear-gradient(180deg, rgba(5, 6, 10, 0.78) 0%, rgba(5, 6, 10, 0.22) 24%, rgba(5, 6, 10, 0) 38%),
+        linear-gradient(180deg, rgba(5, 6, 10, 0) 64%, rgba(5, 6, 10, 0.58) 84%, rgba(5, 6, 10, 0.9) 100%);
+    }
+    .top, .bottom {
+      position: absolute;
+      left: 0;
+      right: 0;
+      text-align: center;
+      color: #efe6d2;
+    }
+    .top { top: 22px; }
+    .bottom { bottom: 32px; }
+    .mark {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      color: #e4c36a;
+      letter-spacing: 0.42em;
+      font: 500 15px/1 "Songti SC", "STSong", "Songti", serif;
+      text-indent: 0.42em;
+    }
+    .mark .tri {
+      width: 0;
+      height: 0;
+      border-left: 7px solid transparent;
+      border-right: 7px solid transparent;
+      border-bottom: 12px solid #e4c36a;
+      position: relative;
+    }
+    .mark .tri::after {
+      content: "";
+      position: absolute;
+      left: -3px;
+      top: 5px;
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: #c23b3b;
+    }
+    h1 {
+      margin: 10px 0 6px;
+      font: 700 78px/1 "Songti SC", "STSong", "Songti", serif;
+      color: #e4c36a;
+      letter-spacing: 0.22em;
+      text-indent: 0.22em;
+      text-shadow: 0 4px 28px rgba(0, 0, 0, 0.65);
+    }
+    .en {
+      margin: 0;
+      font: 500 20px/1.2 "Songti SC", "Times New Roman", serif;
+      letter-spacing: 0.58em;
+      text-indent: 0.58em;
+      color: rgba(239, 230, 210, 0.78);
+    }
+    .gold-line {
+      width: 180px;
+      height: 1px;
+      margin: 18px auto 0;
+      background: linear-gradient(90deg, transparent, #e4c36a, transparent);
+    }
+    .tag {
+      margin: 0 0 10px;
+      font: 600 28px/1.2 "Songti SC", "STSong", serif;
+      letter-spacing: 0.28em;
+      text-indent: 0.28em;
+      color: #efe6d2;
+    }
+    .sub {
+      margin: 0 0 8px;
+      font: 400 18px/1.4 "Songti SC", "STSong", serif;
+      letter-spacing: 0.18em;
+      text-indent: 0.18em;
+      color: rgba(239, 230, 210, 0.72);
+    }
+    .url {
+      margin: 0;
+      font: 400 15px/1.2 "Helvetica Neue", "Songti SC", sans-serif;
+      letter-spacing: 0.16em;
+      color: #e4c36a;
+    }
+  </style>
+</head>
+<body>
+  <div class="frame">
+    <img class="art" src="./promo-keyart.jpg" alt="" />
+    <div class="veil"></div>
+    <div class="top">
+      <div class="mark"><span class="tri"></span>CHAINSTRAT</div>
+      <h1>连环计</h1>
+      <p class="en">PLAN FIRST · STRIKE LAST</p>
+      <div class="gold-line"></div>
+    </div>
+    <div class="bottom">
+      <p class="tag">先谋后动 · 设定连环技能</p>
+      <p class="sub">Monad 上的 1v1 英雄连招对决</p>
+      <p class="url">chainstrat.zhanghe.dev</p>
+    </div>
+  </div>
+</body>
+</html>
