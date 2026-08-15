@@ -1,0 +1,26 @@
+name = "chainstrat"
+main = "worker/index.ts"
+compatibility_date = "2026-08-01"
+compatibility_flags = ["nodejs_compat"]
+
+[[routes]]
+pattern = "chainstrat.zhanghe.dev"
+custom_domain = true
+
+[assets]
+directory = "dist"
+binding = "ASSETS"
+not_found_handling = "single-page-application"
+
+[durable_objects]
+bindings = [{ name = "MATCHMAKER", class_name = "Matchmaker" }]
+
+[[migrations]]
+tag = "v1"
+new_sqlite_classes = ["Matchmaker"]
+
+[vars]
+MONAD_RPC = "https://testnet-rpc.monad.xyz"
+HERO_NFT_ADDRESS = "0x595Ee3d4873898C6b1dfDD6208fc9DFC8b618d84"
+BATTLE_RECORDER_ADDRESS = "0x4D3fe98448bc03F24EA4d7404c87b6724F5a9027"
+AUTHORITY_ADDRESS = "0x52e9A3868375Ba6b4fC92612642068c00936FF56"
