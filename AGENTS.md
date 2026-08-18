@@ -51,6 +51,7 @@ Authority 私钥只在本地 `.dev.vars` 的 `AUTHORITY_PRIVATE_KEY`，上线 Wo
 ## Production (Cloudflare Worker + assets)
 
 - Site: https://chainstrat.zhanghe.dev
+- Short: https://cs.zhanghe.dev (301 to the site, path and query preserved)
 - Health: https://chainstrat.zhanghe.dev/api/health
 - Deploy: `pnpm deploy` (`vite build` + `wrangler deploy`)
 - Contracts stay on **Monad Testnet** (not mainnet).

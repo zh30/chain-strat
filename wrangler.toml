@@ -7,10 +7,16 @@ compatibility_flags = ["nodejs_compat"]
 pattern = "chainstrat.zhanghe.dev"
 custom_domain = true
 
+[[routes]]
+pattern = "cs.zhanghe.dev"
+custom_domain = true
+
 [assets]
 directory = "dist"
 binding = "ASSETS"
 not_found_handling = "single-page-application"
+# Worker must see Host first so cs.zhanghe.dev can 301, and so /sw.js headers apply.
+run_worker_first = true
 
 [durable_objects]
 bindings = [{ name = "MATCHMAKER", class_name = "Matchmaker" }]

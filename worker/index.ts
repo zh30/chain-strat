@@ -33,7 +33,16 @@ type ClientMsg =
   | { type: 'resume'; matchId: `0x${string}` }
   | { type: 'cancel' }
 
+const CANONICAL_HOST = 'chainstrat.zhanghe.dev'
+const SHORT_HOSTS = new Set(['cs.zhanghe.dev'])
 const SW_ASSETS = new Set(['/sw.js', '/registerSW.js', '/manifest.webmanifest'])
+
+function redirectIfShortHost(request: Request): Response | null {
+  const url = new URL(request.url)
+  if (!SHORT_HOSTS.has(url.hostname.toLowerCase())) return null
+  const dest = new URL(url.pathname + url.search, `https://${CANONICAL_HOST}`)
+  return Response.redirect(dest.toString(), 301)
+}
 
 function isServiceWorkerAsset(pathname: string): boolean {
   return SW_ASSETS.has(pathname)
@@ -54,6 +63,8 @@ function withServiceWorkerHeaders(response: Response, pathname: string): Respons
 
 export default {
   async fetch(request: Request, env: Env): Promise<Response> {
+    const short = redirectIfShortHost(request)
+    if (short) return short
     const url = new URL(request.url)
     if (url.pathname === '/ws' || url.pathname === '/api/ws') {
       const id = env.MATCHMAKER.idFromName('global')
