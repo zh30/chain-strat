@@ -90,6 +90,7 @@ export default defineConfig({
           { name: '大厅', short_name: '大厅', url: '/', description: '回到大厅' },
           { name: '英雄库', short_name: '英雄库', url: '/?screen=library' },
           { name: '天梯', short_name: '天梯', url: '/?screen=ladder' },
+          { name: '擂台', short_name: '擂台', url: '/?screen=arena' },
         ],
         screenshots: [
           {

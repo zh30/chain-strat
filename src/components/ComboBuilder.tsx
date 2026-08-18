@@ -234,6 +234,14 @@ export function ComboBuilder() {
           >
             人机对战
           </button>
+          <button
+            type="button"
+            disabled={!canFight}
+            onClick={() => setScreen('arena')}
+            className="rounded-full border border-gold/40 py-3 text-gold"
+          >
+            上擂
+          </button>
         </div>
       </div>
     </section>

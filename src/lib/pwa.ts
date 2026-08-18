@@ -3,7 +3,7 @@ import type { Screen } from '../store'
 export const INSTALL_DISMISS_KEY = 'chainstrat.pwa.installDismissed'
 export const IOS_HINT_DISMISS_KEY = 'chainstrat.pwa.iosHintDismissed'
 
-export const DEEP_LINK_SCREENS = ['hall', 'library', 'ladder', 'combo', 'market'] as const
+export const DEEP_LINK_SCREENS = ['hall', 'library', 'ladder', 'combo', 'market', 'arena'] as const
 export type DeepLinkScreen = (typeof DEEP_LINK_SCREENS)[number]
 
 export function parseScreenParam(search: string): DeepLinkScreen | null {
@@ -15,7 +15,13 @@ export function parseScreenParam(search: string): DeepLinkScreen | null {
 
 export function pathForScreen(screen: Screen): string | null {
   if (screen === 'hall') return '/'
-  if (screen === 'library' || screen === 'ladder' || screen === 'combo' || screen === 'market') {
+  if (
+    screen === 'library' ||
+    screen === 'ladder' ||
+    screen === 'combo' ||
+    screen === 'market' ||
+    screen === 'arena'
+  ) {
     return `/?screen=${screen}`
   }
   return null

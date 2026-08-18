@@ -29,7 +29,7 @@ forge test
 - `src/lib/combat.ts` — 权威确定性模拟器（整数 tick）
 - `worker/index.ts` — Matchmaker Durable Object，配对后先模拟再下发 EventLog
 - `src/game/BattleScene.ts` — Phaser 4 只播放 log
-- `contracts/` — 灵魂绑定 HeroNFT + 可交易 ComboNFT + Worker 签名的 BattleRecorder
+- `contracts/` — 灵魂绑定 HeroNFT + 可交易 ComboNFT + Worker 签名的 BattleRecorder + 守擂 Arena
 
 钱包用 RainbowKit 2.2 + **wagmi 2.x**（RainbowKit 2.2 不支持 wagmi 3；v3 会导致 MetaMask 只转圈、扩展不弹窗）。
 Gas：claim / record 使用 estimateGas + 10% buffer。
@@ -41,6 +41,7 @@ Gas：claim / record 使用 estimateGas + 10% buffer。
 | HeroNFT | `0x595Ee3d4873898C6b1dfDD6208fc9DFC8b618d84` |
 | BattleRecorder | `0x4D3fe98448bc03F24EA4d7404c87b6724F5a9027` |
 | ComboNFT | `0x2A633509d3929B02A829362B163FDbbaa721a8a3` |
+| Arena | 待 `script/DeployArena.s.sol` 广播（`VITE_ARENA_ADDRESS`） |
 | Owner (Agent Wallet) | `0x1872277f92af762768c5280fa9fa65f92674a304` |
 | Authority (Worker signer) | `0x52e9A3868375Ba6b4fC92612642068c00936FF56` |
 
@@ -63,4 +64,4 @@ Authority 私钥只在本地 `.dev.vars` 的 `AUTHORITY_PRIVATE_KEY`，上线 Wo
 - Icons in `public/icons/` (192/512 + maskable + apple-touch). Do not rely on SVG-only icons for installability.
 - Service worker must stay `Cache-Control: no-cache` (Worker sets this for `/sw.js`).
 - Do not auto-reload during `match` / `battle`.
-- Deep links: `/?screen=library` and `/?screen=ladder` (PWA shortcuts).
+- Deep links: `/?screen=library`, `/?screen=ladder`, and `/?screen=arena` (PWA shortcuts).

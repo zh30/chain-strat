@@ -1,6 +1,8 @@
 import { DurableObject } from 'cloudflare:workers'
-import { keccak256, type Hex } from 'viem'
+import { createPublicClient, http, keccak256, type Hex } from 'viem'
 import { privateKeyToAccount } from 'viem/accounts'
+import { arenaAbi } from '../src/lib/abi'
+import { commitStandCombo, hashCombo, simulateArenaChallenge, standStorageKey } from '../src/lib/arena'
 import { generateBotLoadout } from '../src/lib/combo'
 import { simulateBattle } from '../src/lib/combat'
 import { seedFromBytes } from '../src/lib/rng'
@@ -15,6 +17,7 @@ export interface Env {
   AUTHORITY_PRIVATE_KEY: string
   AUTHORITY_ADDRESS: string
   BATTLE_RECORDER_ADDRESS: `0x${string}`
+  ARENA_ADDRESS: `0x${string}`
   MONAD_RPC: string
 }
 
@@ -32,6 +35,8 @@ type ClientMsg =
   | { type: 'bot'; address: `0x${string}`; heroId: HeroId; combo: string[] }
   | { type: 'resume'; matchId: `0x${string}` }
   | { type: 'cancel' }
+  | { type: 'stand_store'; standId: string; combo: string[]; role?: 'defender' | 'challenger' }
+  | { type: 'arena_challenge'; standId: string; combo?: string[] }
 
 const CANONICAL_HOST = 'chainstrat.zhanghe.dev'
 const SHORT_HOSTS = new Set(['cs.zhanghe.dev'])
@@ -130,6 +135,17 @@ export class Matchmaker extends DurableObject<Env> {
           },
           null,
         )
+        ws.send(JSON.stringify({ type: 'matched', payload }))
+        return
+      }
+      if (msg.type === 'stand_store') {
+        const stored = await this.storeStandCombo(msg.standId, msg.combo, msg.role ?? 'defender')
+        ws.send(JSON.stringify({ type: 'stand_stored', standId: msg.standId, hash: stored }))
+        return
+      }
+      if (msg.type === 'arena_challenge') {
+        if (msg.combo) await this.storeStandCombo(msg.standId, msg.combo, 'challenger')
+        const payload = await this.resolveArena(msg.standId)
         ws.send(JSON.stringify({ type: 'matched', payload }))
         return
       }
@@ -308,5 +324,78 @@ export class Matchmaker extends DurableObject<Env> {
 
     await this.ctx.storage.put(`match:${matchId}`, payload)
     return payload
+  }
+
+  private arenaConfigured(): `0x${string}` | null {
+    const addr = this.env.ARENA_ADDRESS
+    if (!addr || addr === '0x0000000000000000000000000000000000000000') return null
+    return addr
+  }
+
+  private async readStand(standId: bigint) {
+    const address = this.arenaConfigured()
+    if (!address) throw new Error('arena not configured')
+    const client = createPublicClient({ transport: http(this.env.MONAD_RPC) })
+    return client.readContract({
+      address,
+      abi: arenaAbi,
+      functionName: 'standAt',
+      args: [standId],
+    })
+  }
+
+  private async storeStandCombo(
+    standIdRaw: string,
+    combo: string[],
+    role: 'defender' | 'challenger',
+  ): Promise<Hex> {
+    const standId = BigInt(standIdRaw)
+    const stand = await this.readStand(standId)
+    const committed = role === 'defender' ? stand.comboHash : stand.challengerComboHash
+    if (committed === '0x0000000000000000000000000000000000000000000000000000000000000000') {
+      throw new Error('combo hash not on chain')
+    }
+    commitStandCombo(combo, committed)
+    await this.ctx.storage.put(`${standStorageKey(standId)}:${role}`, combo)
+    return hashCombo(combo)
+  }
+
+  private async resolveArena(standIdRaw: string): Promise<MatchPayload> {
+    const standId = BigInt(standIdRaw)
+    const stand = await this.readStand(standId)
+    if (stand.status !== 2) throw new Error('stand is not pending')
+    const defenderCombo = await this.ctx.storage.get<string[]>(`${standStorageKey(standId)}:defender`)
+    const challengerCombo = await this.ctx.storage.get<string[]>(`${standStorageKey(standId)}:challenger`)
+    if (!defenderCombo || !challengerCombo) throw new Error('combo plaintext missing')
+
+    const { payload } = simulateArenaChallenge({
+      standId,
+      defender: stand.defender,
+      challenger: stand.challenger,
+      defenderHeroType: stand.heroType,
+      challengerHeroType: stand.challengerHero,
+      defenderCombo,
+      challengerCombo,
+      defenderHash: stand.comboHash,
+      challengerHash: stand.challengerComboHash,
+      prevrandao: stand.entropy,
+      nonce: stand.nonce,
+      stakeWei: stand.stake,
+    })
+
+    const signed: MatchPayload = { ...payload, signature: '0x' }
+    const pk = this.env.AUTHORITY_PRIVATE_KEY
+    const recorder = this.env.BATTLE_RECORDER_ADDRESS
+    if (pk && recorder && recorder !== '0x0000000000000000000000000000000000000000') {
+      const account = privateKeyToAccount(pk as Hex)
+      signed.signature = await signMatch(
+        account,
+        MONAD_TESTNET_ID,
+        recorder,
+        payloadToMatchMessage(signed),
+      )
+    }
+    await this.ctx.storage.put(`match:${signed.matchId}`, signed)
+    return signed
   }
 }

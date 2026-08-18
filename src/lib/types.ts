@@ -120,6 +120,15 @@ export interface PlayerLoadout {
   rating: number
 }
 
+export interface ArenaSettlement {
+  standId: string
+  stakeWei: string
+  winnerPayoutWei: string
+  treasuryWei: string
+  defenderCombo: string
+  challengerCombo: string
+}
+
 export interface MatchPayload {
   matchId: `0x${string}`
   seed: number
@@ -127,6 +136,7 @@ export interface MatchPayload {
   players: [PlayerLoadout, PlayerLoadout]
   result: BattleResult
   signature: `0x${string}`
+  arena?: ArenaSettlement
 }
 
 export const BOT_ADDRESS = '0x0000000000000000000000000000000000000000' as const

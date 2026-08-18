@@ -3,6 +3,7 @@ import { useAccount } from 'wagmi'
 import { BattleView } from './components/BattleView'
 import { DemoBattle, isDemoBattleRequest } from './components/DemoBattle'
 import { ComboBuilder } from './components/ComboBuilder'
+import { ArenaView } from './components/ArenaView'
 import { ComboMarket } from './components/ComboMarket'
 import { GameHud } from './components/GameHud'
 import { Hall } from './components/Hall'
@@ -17,7 +18,7 @@ import { useStarterPack } from './hooks/useStarterPack'
 import { pathForScreen } from './lib/pwa'
 import { useGame } from './store'
 
-const PLAY_SCREENS = new Set(['combo', 'match', 'battle', 'result'])
+const PLAY_SCREENS = new Set(['combo', 'match', 'battle', 'result', 'arena'])
 
 export default function App() {
   const { address, isConnected } = useAccount()
@@ -67,6 +68,7 @@ export default function App() {
         {screen === 'result' && <ResultView />}
         {screen === 'ladder' && <Ladder />}
         {screen === 'market' && <ComboMarket />}
+        {screen === 'arena' && <ArenaView />}
       </main>
     </div>
   )

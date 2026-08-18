@@ -99,6 +99,13 @@ export function Hall() {
               <p className="mt-1 text-sm text-mute">买别人写死的连环。买的是计，不是将。</p>
             </div>
           </button>
+          <button type="button" className="lobby-door" onClick={() => setScreen('arena')}>
+            <b>05</b>
+            <div>
+              <strong>擂台</strong>
+              <p className="mt-1 text-sm text-mute">挂上英雄和连招。人不在，计还在。</p>
+            </div>
+          </button>
         </div>
       </div>
     </section>

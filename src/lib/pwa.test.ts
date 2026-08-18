@@ -16,16 +16,18 @@ describe('parseScreenParam', () => {
     expect(parseScreenParam('screen=ladder')).toBe('ladder')
     expect(parseScreenParam('?screen=combo&x=1')).toBe('combo')
     expect(parseScreenParam('?screen=market')).toBe('market')
+    expect(parseScreenParam('?screen=arena')).toBe('arena')
     expect(parseScreenParam('?screen=battle')).toBeNull()
     expect(parseScreenParam('')).toBeNull()
   })
 })
 
 describe('pathForScreen', () => {
-  it('only persists hall-library-ladder-combo', () => {
+  it('only persists hall-library-ladder-combo-arena', () => {
     expect(pathForScreen('hall')).toBe('/')
     expect(pathForScreen('ladder')).toBe('/?screen=ladder')
     expect(pathForScreen('market')).toBe('/?screen=market')
+    expect(pathForScreen('arena')).toBe('/?screen=arena')
     expect(pathForScreen('match')).toBeNull()
     expect(pathForScreen('battle')).toBeNull()
   })

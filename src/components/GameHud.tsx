@@ -11,6 +11,7 @@ const TABS: { id: Screen; label: string }[] = [
   { id: 'combo', label: '编计' },
   { id: 'ladder', label: '名册' },
   { id: 'market', label: '玉市' },
+  { id: 'arena', label: '擂台' },
 ]
 
 export function GameHud({

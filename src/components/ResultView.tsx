@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
-import { BaseError, UserRejectedRequestError } from 'viem'
+import { BaseError, UserRejectedRequestError, formatEther } from 'viem'
 import { useAccount, usePublicClient, useWriteContract } from 'wagmi'
+import { arenaContractReady, useArena } from '../hooks/useArena'
 import { MONAD_TESTNET_ID } from '../lib/chain'
 import { battleRecorderAbi } from '../lib/abi'
 import { shortAddress } from '../lib/chain'
@@ -8,7 +9,7 @@ import { hashOfResult } from '../lib/hash'
 import { getHero } from '../lib/heroes'
 import { payloadToMatchMessage } from '../lib/signing'
 import { snapshotPlayer, type MatchReward, type PlayerSnap } from '../lib/ladder'
-import type { BattleEndReason, BattleEvent, Side } from '../lib/types'
+import type { BattleEndReason, BattleEvent, MatchPayload, Side } from '../lib/types'
 import { useGame } from '../store'
 
 const REASON_ZH: Record<BattleEndReason, string> = {
@@ -97,7 +98,9 @@ export function ResultView() {
   const { address } = useAccount()
   const client = usePublicClient({ chainId: MONAD_TESTNET_ID })
   const { writeContractAsync } = useWriteContract()
+  const arena = useArena()
   const [tx, setTx] = useState<string | null>(null)
+  const [arenaPhase, setArenaPhase] = useState<'idle' | 'pending' | 'done' | 'failed'>('idle')
   const [err, setErr] = useState<string | null>(null)
   const [phase, setPhase] = useState<'idle' | 'wallet' | 'pending' | 'done' | 'failed'>('idle')
   const [reward, setReward] = useState<MatchReward | null>(null)
@@ -131,6 +134,11 @@ export function ResultView() {
       if (already) {
         const after = await snapshotPlayer(client, recorder, address)
         setReward(buildReward(after, after, outcome, payload.result.reason, payload.vsBot, youTally, true))
+        if (payload.arena && arenaContractReady()) {
+          setArenaPhase('pending')
+          const settled = await arena.resolve(payload)
+          setArenaPhase(settled ? 'done' : 'failed')
+        }
         setPhase('done')
         return
       }
@@ -152,6 +160,11 @@ export function ResultView() {
       })
       setPhase('pending')
       await client.waitForTransactionReceipt({ hash })
+      if (payload.arena && arenaContractReady()) {
+        setArenaPhase('pending')
+        const settled = await arena.resolve(payload)
+        setArenaPhase(settled ? 'done' : 'failed')
+      }
       const after = await snapshotPlayer(client, recorder, address)
       setReward(buildReward(before, after, outcome, payload.result.reason, payload.vsBot, youTally, false))
       setTx(hash)
@@ -170,7 +183,7 @@ export function ResultView() {
       setPhase('failed')
       setErr(message)
     }
-  }, [address, canChain, client, payload, recorder, writeContractAsync])
+  }, [address, arena, canChain, client, payload, recorder, writeContractAsync])
 
   useEffect(() => {
     if (!payload || !canChain || !client || !address) return
@@ -207,6 +220,7 @@ export function ResultView() {
           {payload.vsBot ? ' · 人机' : ''}
         </div>
         <h2 className={`font-display mt-2 text-6xl tracking-[0.2em] sm:text-7xl ${verdictColor}`}>{verdict}</h2>
+        {payload.arena && <StakeStrip payload={payload} youWin={youWin} draw={draw} phase={arenaPhase} />}
         {reward && <RewardStrip reward={reward} />}
       </div>
 
@@ -289,6 +303,38 @@ export function ResultView() {
         </button>
       </div>
     </section>
+  )
+}
+
+function StakeStrip({
+  payload,
+  youWin,
+  draw,
+  phase,
+}: {
+  payload: MatchPayload
+  youWin: boolean
+  draw: boolean
+  phase: 'idle' | 'pending' | 'done' | 'failed'
+}) {
+  const arena = payload.arena
+  if (!arena) return null
+  const stake = formatEther(BigInt(arena.stakeWei))
+  const prize = formatEther(BigInt(arena.winnerPayoutWei))
+  const cut = formatEther(BigInt(arena.treasuryWei))
+  const line = draw
+    ? `平局退押 · 各退 ${stake} MON`
+    : youWin
+      ? `胜者得 ${prize} MON · 金库 ${cut} MON`
+      : `押金 ${stake} MON 已按 95/5 结算`
+  return (
+    <p className="mt-3 text-sm text-gold-dim">
+      守擂 · 押金 {stake} MON
+      {draw ? '' : ` × 2`} · {line}
+      {phase === 'pending' ? ' · 正在结算押金' : ''}
+      {phase === 'done' ? ' · 押金已上链' : ''}
+      {phase === 'failed' ? ' · 押金结算未完成，可回擂台重试' : ''}
+    </p>
   )
 }
 

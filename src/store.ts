@@ -2,7 +2,7 @@ import { create } from 'zustand'
 import { parseScreenParam } from './lib/pwa'
 import type { HeroId, MatchPayload } from './lib/types'
 
-export type Screen = 'hall' | 'library' | 'combo' | 'match' | 'battle' | 'result' | 'ladder' | 'market'
+export type Screen = 'hall' | 'library' | 'combo' | 'match' | 'battle' | 'result' | 'ladder' | 'market' | 'arena'
 
 interface GameStore {
   screen: Screen
