@@ -17,3 +17,5 @@ coverage
 .vscode
 *.tsbuildinfo
 contracts/.deploy-authority.json
+.pnpm-store
+.frontend-slides
