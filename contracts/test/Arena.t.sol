@@ -14,6 +14,7 @@ contract ArenaAttacker {
     string public defenderCombo;
     string public challengerCombo;
     bool public reentered;
+    bool public innerReverted;
     bool public armed;
 
     constructor(Arena arena_) {
@@ -38,7 +39,10 @@ contract ArenaAttacker {
     receive() external payable {
         if (!armed || reentered) return;
         reentered = true;
-        try arena.resolve(standId, matchInput, signature, defenderCombo, challengerCombo) {} catch {}
+        try arena.resolve(standId, matchInput, signature, defenderCombo, challengerCombo) {
+        } catch {
+            innerReverted = true;
+        }
     }
 
     function doChallenge(uint256 id, uint8 heroType, bytes32 comboHash) external payable {
@@ -281,6 +285,7 @@ contract ArenaTest is Test {
         uint256 before = address(attacker).balance;
         arena.resolve(standId, m, sig, DEF_COMBO, ATK_COMBO);
         assertTrue(attacker.reentered());
+        assertTrue(attacker.innerReverted());
         uint256 pot = STAKE * 2;
         uint256 prize = pot - pot * 5 / 100;
         assertEq(address(attacker).balance, before + prize);
