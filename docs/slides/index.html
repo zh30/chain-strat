@@ -280,7 +280,7 @@
             position: absolute;
             left: 100px;
             right: 100px;
-            bottom: 92px;
+            bottom: 150px;
             z-index: 2;
         }
 
@@ -297,11 +297,40 @@
             font-weight: 500;
         }
 
-        .title-copy .meta {
+        .title-copy .handle {
             margin-top: 22px;
+            font-family: var(--font-body);
+            font-size: 64px;
+            line-height: 1;
+            color: var(--gold);
+            letter-spacing: 0.04em;
+            text-transform: none;
+            font-weight: 700;
+            text-shadow: 0 4px 24px rgba(0, 0, 0, 0.7);
+        }
+
+        .title-copy .meta {
+            margin-top: 16px;
             font-size: 20px;
             color: var(--mute);
             letter-spacing: 0.08em;
+        }
+
+        /* Persistent site URL — on every slide, large enough to read from the room */
+        .site-url {
+            position: absolute;
+            left: 0;
+            right: 0;
+            bottom: 42px;
+            z-index: 6;
+            text-align: center;
+            font-family: var(--font-body);
+            font-size: 46px;
+            letter-spacing: 0.04em;
+            font-weight: 700;
+            text-transform: none;
+            color: var(--gold);
+            text-shadow: 0 4px 22px rgba(0, 0, 0, 0.85);
         }
 
         /* ===========================================
@@ -311,7 +340,7 @@
             position: relative;
             z-index: 2;
             height: 1080px;
-            padding: 96px 110px 88px;
+            padding: 96px 110px 130px;
             display: flex;
             flex-direction: column;
         }
@@ -347,7 +376,7 @@
             border: 1px solid rgba(228, 195, 106, 0.22);
             background: rgba(16, 18, 24, 0.55);
             padding: 40px 36px 44px;
-            min-height: 420px;
+            min-height: 380px;
         }
 
         .step .num {
@@ -404,11 +433,14 @@
 
         /* Demo close */
         .demo-url {
-            font-family: var(--font-en);
-            font-size: 42px;
+            font-family: var(--font-body);
+            font-size: 72px;
             color: var(--gold);
-            letter-spacing: 0.12em;
-            margin-top: 28px;
+            letter-spacing: 0.02em;
+            font-weight: 700;
+            text-transform: none;
+            margin-top: 36px;
+            text-shadow: 0 4px 22px rgba(0, 0, 0, 0.55);
         }
 
         .hint {
@@ -422,6 +454,10 @@
            CHROME (outside the 16:9 design)
            =========================================== */
         .deck-controls {
+            left: auto;
+            right: 18px;
+            bottom: 16px;
+            transform: none;
             display: flex;
             align-items: center;
             gap: 14px;
@@ -511,37 +547,26 @@
                  SLIDE 1 / 6  封面
                  讲：大家好，这是连环计。先把杀招写死，再把人放进去。
                  =========================================== -->
-            <section class="slide title-slide active" data-notes="大家好，这是连环计。一句话记住：先把杀招写死，再把人放进去。开打之后不能再动手。">
+            <section class="slide title-slide active" data-notes="大家好，这是连环计。我是 @zhanghe。一句话记住：先把杀招写死，再把人放进去。">
                 <img class="hero-art" src="assets/keyart.jpg" alt="连环计：铁卫对夜裁">
                 <div class="veil"></div>
                 <div class="title-copy">
                     <p class="kicker reveal">CHAINSTRAT</p>
                     <h1 class="zh-title reveal">连环计</h1>
                     <p class="tag reveal">先把杀招写死，再把人放进去</p>
-                    <p class="meta reveal">Monad 上的 1v1 英雄连招对决 · Henry Zhang</p>
+                    <p class="handle reveal">@zhanghe</p>
+                    <p class="meta reveal">Monad 上的 1v1 英雄连招对决</p>
                 </div>
+                <p class="site-url">cs.zhanghe.dev</p>
             </section>
 
             <!-- ===========================================
-                 SLIDE 2 / 6  这是什么
-                 讲：不是拼手速。你先想好，锁死，然后看两套计对撞。
-                 =========================================== -->
-            <section class="slide" data-notes="这不是王者那种临场点技能。你先把连招想好、锁死。开打之后，谁也不能再动手。两套计当场对撞。">
-                <div class="pad">
-                    <p class="kicker reveal">01 · 这是什么</p>
-                    <h2 class="zh-title reveal">不是拼手速</h2>
-                    <p class="big-line reveal">你先把连招写好。<br>开打之后，<em>谁也不能再动手</em>。<br>两套计，当场对撞。</p>
-                    <p class="hint reveal">正规打 60 秒。打平了就加时，谁先掉血谁输。</p>
-                </div>
-            </section>
-
-            <!-- ===========================================
-                 SLIDE 3 / 6  怎么玩
+                 SLIDE 2 / 4  怎么玩
                  讲：三步。领英雄、编连招、看对战。
                  =========================================== -->
             <section class="slide" data-notes="三步就能玩。连钱包，一笔领四个免费英雄。花最多六十秒把技能排好。然后匹配，自己只准看。">
                 <div class="pad">
-                    <p class="kicker reveal">02 · 怎么玩</p>
+                    <p class="kicker reveal">01 · 怎么玩</p>
                     <h2 class="zh-title reveal">三步</h2>
                     <div class="steps">
                         <article class="step reveal">
@@ -561,20 +586,21 @@
                         </article>
                     </div>
                 </div>
+                <p class="site-url">cs.zhanghe.dev</p>
             </section>
 
             <!-- ===========================================
-                 SLIDE 4 / 6  特别在哪
-                 讲：英雄卖不掉，连招能卖，分数不能自己报。
+                 SLIDE 3 / 4  特别在哪
+                 讲：免费英雄锁死；收费英雄限量，买到就能再卖。连招能卖。分数不能自己报。
                  =========================================== -->
-            <section class="slide" data-notes="三件和别的链游不一样的事。英雄锁死，卖不掉。连招可以铸成 NFT 卖掉。分数要权威签字才写上链，玩家不能自己报分。">
+            <section class="slide" data-notes="免费英雄锁在你身上，卖不掉。以后收费英雄是限量的，买到手就能再卖掉。连招也可以铸成 NFT 卖掉。分数要权威签字才写上链。">
                 <div class="pad">
-                    <p class="kicker reveal">03 · 特别在哪</p>
+                    <p class="kicker reveal">02 · 特别在哪</p>
                     <h2 class="zh-title reveal">三件不一样的事</h2>
                     <div class="diffs">
                         <div class="diff reveal">
                             <p class="label">英雄</p>
-                            <p class="say">锁在你身上。卖不掉。渊不信任把将卖掉的人。</p>
+                            <p class="say">免费的锁死，卖不掉。收费的限量，买到手之后可以再卖掉。</p>
                         </div>
                         <div class="diff reveal">
                             <p class="label">连招</p>
@@ -586,40 +612,29 @@
                         </div>
                     </div>
                 </div>
+                <p class="site-url">cs.zhanghe.dev</p>
             </section>
 
             <!-- ===========================================
-                 SLIDE 5 / 6  为什么 Monad
-                 讲：这些动作会反复发生，Monad 又快又便宜。
-                 =========================================== -->
-            <section class="slide" data-notes="领将、记分、买卖连招，会反复发生。慢链或贵链会把游戏卡死。Monad 又快又便宜，这些动作才像点按钮，不像等区块。">
-                <div class="pad">
-                    <p class="kicker reveal">04 · 为什么在 Monad</p>
-                    <h2 class="zh-title reveal">这些动作会反复发生</h2>
-                    <p class="big-line reveal">领将、记分、买卖连招。<br>Monad <em>又快又便宜</em>，<br>才能当成普通按钮来按。</p>
-                    <p class="hint reveal">战斗本身不上链。链只认三件事：人、计、分。</p>
-                </div>
-            </section>
-
-            <!-- ===========================================
-                 SLIDE 6 / 6  演示
+                 SLIDE 4 / 4  演示
                  讲：现在打开网站，打一场给大家看。
                  =========================================== -->
             <section class="slide" data-notes="现在打开网站。连钱包，领将，一键随机连招，走人机打一场。看完把战报写上链。">
                 <div class="pad">
-                    <p class="kicker reveal">05 · 现在演示</p>
+                    <p class="kicker reveal">03 · 现在演示</p>
                     <h2 class="zh-title reveal">打开就能打</h2>
                     <p class="big-line reveal">连钱包。领将。编计。看打。</p>
-                    <p class="demo-url reveal">chainstrat.zhanghe.dev</p>
+                    <p class="demo-url reveal">cs.zhanghe.dev</p>
                     <p class="hint reveal">切到 Monad 测试网。单人演示请选人机对战。</p>
                 </div>
+                <p class="site-url">cs.zhanghe.dev</p>
             </section>
         </main>
     </div>
 
     <div class="deck-controls" id="deckControls" aria-live="polite">
         <span class="dot"></span>
-        <span id="pageLabel">1 / 6</span>
+        <span id="pageLabel">1 / 4</span>
         <span>← → 翻页 · S 讲稿</span>
     </div>
 
@@ -733,11 +748,11 @@
            =========================================== */
         const editor = {
             isActive: false,
-            key: 'chainstrat-slides-v1',
+            key: 'chainstrat-slides-v4',
             toggleEditMode() {
                 this.isActive = !this.isActive;
                 document.getElementById('editToggle').classList.toggle('active', this.isActive);
-                document.querySelectorAll('h1, h2, h3, p, .say, .tag, .meta, .demo-url').forEach((el) => {
+                document.querySelectorAll('h1, h2, h3, p, .say, .tag, .meta, .handle, .demo-url, .site-url').forEach((el) => {
                     el.setAttribute('contenteditable', this.isActive ? 'true' : 'false');
                 });
             },

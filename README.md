@@ -15,6 +15,7 @@
 | 项目 | 地址 |
 | --- | --- |
 | 正式站 | https://chainstrat.zhanghe.dev |
+| 短域名 | https://cs.zhanghe.dev （301 到正式站，路径和查询串会带过去） |
 | 健康检查 | https://chainstrat.zhanghe.dev/api/health |
 | PWA 深链 | [英雄库](https://chainstrat.zhanghe.dev/?screen=library) · [天梯](https://chainstrat.zhanghe.dev/?screen=ladder) · [市集](https://chainstrat.zhanghe.dev/?screen=market) |
 
@@ -207,6 +208,7 @@ chain-strat/
 | [`docs/rules.md`](docs/rules.md) | 玩法与权威模拟规则（实现以此为准） |
 | [`docs/prd.md`](docs/prd.md) | 产品范围、用户流程、英雄数值附录 |
 | [`docs/plan.md`](docs/plan.md) | 半日 MVP 计划与战斗架构说明 |
+| [`docs/plan-v2.md`](docs/plan-v2.md) | V2 改造计划：去中心化与深度玩法（按阶段执行） |
 | [`AGENTS.md`](AGENTS.md) | 给代理 / 维护者的命令与部署备忘 |
 
 `docs/plan.md` 仍写着 wagmi 3 与「自动模式总 duration ≤ 20s」等旧稿。以 `docs/rules.md`、本 README 和代码为准。
