@@ -162,14 +162,23 @@ export function useDuel() {
 
   const mine = useMemo(
     () =>
-      duels.filter((duel) => {
-        if (!address) return false
-        const me = address.toLowerCase()
-        return duel.playerA.toLowerCase() === me || duel.playerB.toLowerCase() === me
-      }),
+      duels
+        .filter((duel) => {
+          if (!address) return false
+          const me = address.toLowerCase()
+          return duel.playerA.toLowerCase() === me || duel.playerB.toLowerCase() === me
+        })
+        .sort((a, b) => {
+          // active first (Committed > Open > Closed), then newest first
+          const rank = (s: number) => (s === DuelStatus.Committed ? 0 : s === DuelStatus.Open ? 1 : 2)
+          return rank(a.status) - rank(b.status) || Number(b.id - a.id)
+        }),
     [address, duels],
   )
-  const open = useMemo(() => duels.filter((duel) => duel.status === DuelStatus.Open), [duels])
+  const open = useMemo(
+    () => duels.filter((duel) => duel.status === DuelStatus.Open).sort((a, b) => Number(b.id - a.id)),
+    [duels],
+  )
 
   const refresh = useCallback(async (): Promise<void> => {
     await Promise.all([countQuery.refetch(), duelsQuery.refetch()])
