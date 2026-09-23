@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { formatEther } from 'viem'
 import { useAccount, useReadContract } from 'wagmi'
 import { duelHouseAbi } from '../lib/abi'
@@ -16,8 +16,8 @@ function statusLabel(status: number): string {
   return '—'
 }
 
-function deadlineLabel(deadline: bigint): string {
-  const left = Number(deadline) - Math.floor(Date.now() / 1000)
+function deadlineLabel(deadline: bigint, nowSec: number): string {
+  const left = Number(deadline) - nowSec
   if (left <= 0) return '揭榜期已过'
   const h = Math.floor(left / 3600)
   const m = Math.floor((left % 3600) / 60)
@@ -26,6 +26,11 @@ function deadlineLabel(deadline: bigint): string {
 
 export function DuelView() {
   const { address } = useAccount()
+  const [nowSec, setNowSec] = useState(() => Math.floor(Date.now() / 1000))
+  useEffect(() => {
+    const timer = window.setInterval(() => setNowSec(Math.floor(Date.now() / 1000)), 30_000)
+    return () => window.clearInterval(timer)
+  }, [])
   const heroId = useGame((s) => s.heroId)
   const combo = useGame((s) => s.combo)
   const setScreen = useGame((s) => s.setScreen)
@@ -111,6 +116,7 @@ export function DuelView() {
               <h3 className="mb-3 text-sm uppercase tracking-widest text-gold-dim">受邀的约战</h3>
               <DuelCard
                 duel={invited}
+                nowSec={nowSec}
                 address={address}
                 canAct={canAct}
                 needCombo={!selected || combo.length === 0}
@@ -188,6 +194,7 @@ export function DuelView() {
                 <DuelCard
                   key={d.id.toString()}
                   duel={d}
+                  nowSec={nowSec}
                   address={address}
                   canAct={canAct}
                   needCombo={!selected || combo.length === 0}
@@ -223,6 +230,7 @@ export function DuelView() {
                   <DuelCard
                     key={d.id.toString()}
                     duel={d}
+                    nowSec={nowSec}
                     address={address}
                     canAct={canAct}
                     needCombo={!selected || combo.length === 0}
@@ -252,6 +260,7 @@ export function DuelView() {
 
 function DuelCard({
   duel,
+  nowSec,
   address,
   canAct,
   needCombo,
@@ -268,6 +277,7 @@ function DuelCard({
   onNeedCombo,
 }: {
   duel: DuelViewData
+  nowSec: number
   address: `0x${string}` | undefined
   canAct: boolean
   needCombo: boolean
@@ -290,7 +300,7 @@ function DuelCard({
   const iRevealed = iAmA ? duel.revealedA : iAmB ? duel.revealedB : false
   const foeRevealed = iAmA ? duel.revealedB : iAmB ? duel.revealedA : false
   const bothRevealed = duel.revealedA && duel.revealedB
-  const expired = duel.revealDeadline > 0n && BigInt(Math.floor(Date.now() / 1000)) >= duel.revealDeadline
+  const expired = duel.revealDeadline > 0n && BigInt(nowSec) >= duel.revealDeadline
   const heroA = getHeroByType(duel.heroA)
   const heroB = duel.heroB ? getHeroByType(duel.heroB) : null
 
@@ -358,7 +368,7 @@ function DuelCard({
 
       {duel.status === DuelStatus.Committed && (
         <div className="mt-4 space-y-2">
-          <p className="text-xs text-mute">{deadlineLabel(duel.revealDeadline)}</p>
+          <p className="text-xs text-mute">{deadlineLabel(duel.revealDeadline, nowSec)}</p>
           <div className="flex gap-2 text-xs text-mute">
             <span className={duel.revealedA ? 'text-jade' : ''}>{iAmA ? '你' : 'A'} {duel.revealedA ? '已揭' : '未揭'}</span>
             <span className={duel.revealedB ? 'text-jade' : ''}>{iAmB ? '你' : 'B'} {duel.revealedB ? '已揭' : '未揭'}</span>

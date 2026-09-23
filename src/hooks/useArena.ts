@@ -1,10 +1,11 @@
 import { useCallback, useMemo, useRef, useState } from 'react'
-import { BaseError, UserRejectedRequestError, formatEther, parseEther } from 'viem'
+import { formatEther, parseEther } from 'viem'
 import { useAccount, usePublicClient, useReadContract, useReadContracts, useWriteContract } from 'wagmi'
 import { arenaAbi } from '../lib/abi'
 import { hashCombo } from '../lib/arena'
 import { MONAD_TESTNET_ID } from '../lib/chain'
 import { payloadToMatchMessage } from '../lib/signing'
+import { isUserRejection, sendWs } from '../lib/tx'
 import type { MatchPayload } from '../lib/types'
 
 export type ArenaTxPhase = 'idle' | 'wallet' | 'pending' | 'done' | 'error'
@@ -36,16 +37,6 @@ export interface ArenaStandView {
   challengerComboHash: `0x${string}`
   nonce: bigint
   entropy: bigint
-}
-
-function isUserRejection(error: unknown): boolean {
-  if (error instanceof UserRejectedRequestError) return true
-  if (error instanceof BaseError) {
-    return error.walk((err) => err instanceof UserRejectedRequestError) instanceof UserRejectedRequestError
-  }
-  return /user rejected|user denied|rejected the request/i.test(
-    error instanceof Error ? error.message : String(error),
-  )
 }
 
 function humanError(error: unknown): string {
@@ -105,33 +96,6 @@ function parseStand(id: bigint, row: unknown): ArenaStandView {
     nonce: tuple[9] as bigint,
     entropy: tuple[10] as bigint,
   }
-}
-
-async function sendWs<T>(body: unknown): Promise<T> {
-  const proto = window.location.protocol === 'https:' ? 'wss' : 'ws'
-  const url = `${proto}://${window.location.host}/ws`
-  return new Promise((resolve, reject) => {
-    const ws = new WebSocket(url)
-    const timer = window.setTimeout(() => {
-      ws.close()
-      reject(new Error('擂台服务超时'))
-    }, 20_000)
-    ws.onopen = () => ws.send(JSON.stringify(body))
-    ws.onmessage = (ev) => {
-      window.clearTimeout(timer)
-      const data = JSON.parse(ev.data as string) as T & { type?: string; message?: string }
-      ws.close()
-      if (data && typeof data === 'object' && 'type' in data && data.type === 'error') {
-        reject(new Error(data.message || '擂台服务错误'))
-        return
-      }
-      resolve(data)
-    }
-    ws.onerror = () => {
-      window.clearTimeout(timer)
-      reject(new Error('擂台服务不可用'))
-    }
-  })
 }
 
 export function useArena() {
@@ -257,7 +221,7 @@ export function useArena() {
       const standId = ids[ids.length - 1]
       if (standId === undefined) return null
       try {
-        await sendWs({ type: 'stand_store', standId: standId.toString(), combo, role: 'defender' })
+        await sendWs({ type: 'stand_store', standId: standId.toString(), combo, role: 'defender' }, '擂台服务')
       } catch (err) {
         setPhase('error')
         setError(err instanceof Error ? err.message : '连招没存上')
@@ -296,7 +260,7 @@ export function useArena() {
           type: 'arena_challenge',
           standId: stand.id.toString(),
           combo,
-        })
+        }, '擂台服务')
         return data.payload
       } catch (err) {
         setPhase('error')

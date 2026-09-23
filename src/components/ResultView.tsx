@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
-import { BaseError, UserRejectedRequestError, formatEther } from 'viem'
+import { formatEther } from 'viem'
 import { useAccount, usePublicClient, useWriteContract } from 'wagmi'
 import { arenaContractReady, useArena } from '../hooks/useArena'
 import { duelContractReady, useDuel } from '../hooks/useDuel'
@@ -10,6 +10,7 @@ import { hashOfResult } from '../lib/hash'
 import { getHero } from '../lib/heroes'
 import { payloadToMatchMessage } from '../lib/signing'
 import { snapshotPlayer, type MatchReward, type PlayerSnap } from '../lib/ladder'
+import { isUserRejection } from '../lib/tx'
 import type { BattleEndReason, BattleEvent, MatchPayload, Side } from '../lib/types'
 import { useGame } from '../store'
 
@@ -81,16 +82,6 @@ function tally(events: BattleEvent[], side: Side) {
 }
 
 const autoStarted = new Set<string>()
-
-function isUserRejection(error: unknown): boolean {
-  if (error instanceof UserRejectedRequestError) return true
-  if (error instanceof BaseError) {
-    return error.walk((err) => err instanceof UserRejectedRequestError) instanceof UserRejectedRequestError
-  }
-  return /user rejected|user denied|rejected the request/i.test(
-    error instanceof Error ? error.message : String(error),
-  )
-}
 
 export function ResultView() {
   const match = useGame((s) => s.match)

@@ -1,6 +1,6 @@
 # 连环计 V2 改造计划：去中心化与深度玩法
 
-**状态**：待执行（按阶段顺序推进）
+**状态**：P3 已交付（PR #1，待部署 DuelHouse）；其余待执行（按阶段顺序推进）
 **日期**：2026-08-19
 **前置**：V1 MVP 已上线（https://chainstrat.zhanghe.dev ，Monad Testnet）
 
@@ -127,6 +127,8 @@
 ---
 
 ## P3 Commit-Reveal 对战（去中心化 PvP 核心）
+
+**状态：已完成（PR #1）**。实现相对本节的偏差：reveal 存 JSON 连招明文而非下标编码（与 Arena 的 `comboPlaintext` 约定一致）；种子用第二位揭榜时的 `block.prevrandao` 而非 blockhash（后揭榜者无法预知种子）；`matchId = keccak("duel", duelId)` 避免与 Worker 随机 matchId 冲突；邀请链接落成 `/?screen=duel&duel=<id>`；新增 `claimRefund` 逃生口（authority 失联时双方退押）。
 
 **解决的问题**：实时匹配的种子与结果都由 Worker 说了算。改为链上 commit-reveal：种子无人可控，连招互相保密，结果任何人可复算。
 

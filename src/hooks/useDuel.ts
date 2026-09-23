@@ -1,11 +1,12 @@
 import { useCallback, useMemo, useRef, useState } from 'react'
-import { BaseError, UserRejectedRequestError, parseEther, type Hex } from 'viem'
+import { parseEther, type Hex } from 'viem'
 import { useAccount, usePublicClient, useReadContract, useReadContracts, useWriteContract } from 'wagmi'
 import { duelHouseAbi } from '../lib/abi'
 import { comboPlaintext } from '../lib/arena'
 import { MONAD_TESTNET_ID } from '../lib/chain'
 import { duelCommit, loadDuelCommit, randomSalt, saveDuelCommit } from '../lib/duel'
 import { payloadToMatchMessage } from '../lib/signing'
+import { isUserRejection, sendWs } from '../lib/tx'
 import type { MatchPayload } from '../lib/types'
 
 export type DuelTxPhase = 'idle' | 'wallet' | 'pending' | 'done' | 'error'
@@ -42,16 +43,6 @@ export interface DuelViewData {
   entropy: bigint
   revealDeadline: bigint
   status: number
-}
-
-function isUserRejection(error: unknown): boolean {
-  if (error instanceof UserRejectedRequestError) return true
-  if (error instanceof BaseError) {
-    return error.walk((err) => err instanceof UserRejectedRequestError) instanceof UserRejectedRequestError
-  }
-  return /user rejected|user denied|rejected the request/i.test(
-    error instanceof Error ? error.message : String(error),
-  )
 }
 
 function humanError(error: unknown): string {
@@ -111,33 +102,6 @@ function parseDuel(id: bigint, row: unknown): DuelViewData | null {
     revealDeadline: t[14] as bigint,
     status: Number(t[15]),
   }
-}
-
-async function sendWs<T>(body: unknown): Promise<T> {
-  const proto = window.location.protocol === 'https:' ? 'wss' : 'ws'
-  const url = `${proto}://${window.location.host}/ws`
-  return new Promise((resolve, reject) => {
-    const ws = new WebSocket(url)
-    const timer = window.setTimeout(() => {
-      ws.close()
-      reject(new Error('约战服务超时'))
-    }, 20_000)
-    ws.onopen = () => ws.send(JSON.stringify(body))
-    ws.onmessage = (ev) => {
-      window.clearTimeout(timer)
-      const data = JSON.parse(ev.data as string) as T & { type?: string; message?: string }
-      ws.close()
-      if (data && typeof data === 'object' && 'type' in data && data.type === 'error') {
-        reject(new Error(data.message || '约战服务错误'))
-        return
-      }
-      resolve(data)
-    }
-    ws.onerror = () => {
-      window.clearTimeout(timer)
-      reject(new Error('约战服务不可用'))
-    }
-  })
 }
 
 function myRevealState(duel: DuelViewData, address: `0x${string}` | undefined): {
@@ -394,7 +358,7 @@ export function useDuel() {
         const data = await sendWs<{ type: 'matched'; payload: MatchPayload }>({
           type: 'duel_settle',
           duelId: duelId.toString(),
-        })
+        }, '约战服务')
         return data.payload
       } catch (err) {
         setPhase('error')
