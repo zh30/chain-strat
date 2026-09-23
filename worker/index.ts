@@ -357,6 +357,7 @@ export class Matchmaker extends DurableObject<Env> {
     combo: string[],
     role: 'defender' | 'challenger',
   ): Promise<Hex> {
+    if (!/^\d+$/.test(standIdRaw)) throw new Error('bad stand id')
     const standId = BigInt(standIdRaw)
     const stand = await this.readStand(standId)
     const committed = role === 'defender' ? stand.comboHash : stand.challengerComboHash
@@ -369,6 +370,7 @@ export class Matchmaker extends DurableObject<Env> {
   }
 
   private async resolveArena(standIdRaw: string): Promise<MatchPayload> {
+    if (!/^\d+$/.test(standIdRaw)) throw new Error('bad stand id')
     const standId = BigInt(standIdRaw)
     const stand = await this.readStand(standId)
     if (stand.status !== 2) throw new Error('stand is not pending')
@@ -402,6 +404,7 @@ export class Matchmaker extends DurableObject<Env> {
   private async resolveDuel(duelIdRaw: string): Promise<MatchPayload> {
     const address = this.duelConfigured()
     if (!address) throw new Error('duel house not configured')
+    if (!/^\d+$/.test(duelIdRaw)) throw new Error('bad duel id')
     const duelId = BigInt(duelIdRaw)
     const client = createPublicClient({ transport: http(this.env.MONAD_RPC) })
     const duel = await client.readContract({
