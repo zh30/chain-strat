@@ -141,7 +141,7 @@ export function DuelView() {
           <div className="panel mb-6 rounded-2xl p-5">
             <h3 className="text-sm uppercase tracking-widest text-gold-dim">发约战</h3>
             <p className="mt-2 text-xs text-mute">
-              押金可填 0。连招只上链哈希，明文到揭榜才公开；24 小时内双方都要揭榜。
+              押金可填 0。连招只上链哈希，明文到揭榜才公开；24 小时内双方都要揭榜。你的盐只存在这台设备上，弄丢或换机就没法揭榜，等于弃权输押。
             </p>
             {!selected && (
               <button type="button" className="mt-3 text-sm text-gold" onClick={() => setScreen('combo')}>
@@ -382,6 +382,9 @@ function DuelCard({
             >
               揭榜（公开连招）
             </button>
+          )}
+          {inDuel && !iRevealed && !expired && (
+            <p className="text-xs text-cinnabar">盐只存在你下帖的那台设备上；没了盐就揭不了榜，超期判负。</p>
           )}
           {inDuel && iRevealed && !foeRevealed && !expired && (
             <p className="text-xs text-mute">你已揭榜，等对手。期限一过可直接拿走全部押金。</p>
