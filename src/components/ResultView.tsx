@@ -189,6 +189,18 @@ export function ResultView() {
     }
   }, [address, arena, duel, canChain, client, payload, recorder, writeContractAsync])
 
+  const retrySettle = useCallback(async (): Promise<void> => {
+    if (!payload) return
+    if (payload.arena && arenaContractReady()) {
+      setArenaPhase('pending')
+      setArenaPhase((await arena.resolve(payload)) ? 'done' : 'failed')
+    }
+    if (payload.duel && duelContractReady()) {
+      setDuelPhase('pending')
+      setDuelPhase((await duel.settle(payload)) ? 'done' : 'failed')
+    }
+  }, [arena, duel, payload])
+
   useEffect(() => {
     if (!payload || !canChain || !client || !address) return
     if (autoStarted.has(payload.matchId)) return
@@ -296,6 +308,15 @@ export function ResultView() {
             重新上链
           </button>
         )}
+        {phase === 'done' && (arenaPhase === 'failed' || duelPhase === 'failed') && (
+          <button
+            type="button"
+            className="rounded-full bg-gold px-8 py-3 font-medium text-ink"
+            onClick={() => void retrySettle()}
+          >
+            重试结算
+          </button>
+        )}
         <button
           type="button"
           className="rounded-full border border-gold/40 px-8 py-3 text-gold"
@@ -338,7 +359,7 @@ function StakeStrip({
       {draw ? '' : ` × 2`} · {line}
       {phase === 'pending' ? ' · 正在结算押金' : ''}
       {phase === 'done' ? ' · 押金已上链' : ''}
-      {phase === 'failed' ? ' · 押金结算未完成，可回擂台重试' : ''}
+      {phase === 'failed' ? ' · 押金结算未完成，可点下方重试' : ''}
     </p>
   )
 }
@@ -370,7 +391,7 @@ function DuelStrip({
       {draw ? '' : ` × 2`} · {line}
       {phase === 'pending' ? ' · 正在结算押金' : ''}
       {phase === 'done' ? ' · 押金已上链' : ''}
-      {phase === 'failed' ? ' · 押金结算未完成，可回约战页重试' : ''}
+      {phase === 'failed' ? ' · 押金结算未完成，可点下方重试' : ''}
     </p>
   )
 }
