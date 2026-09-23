@@ -148,10 +148,20 @@ export function useArena() {
   }, [standsQuery.data])
 
   const mine = useMemo(
-    () => stands.filter((stand) => address && stand.defender.toLowerCase() === address.toLowerCase()),
+    () =>
+      stands
+        .filter((stand) => address && stand.defender.toLowerCase() === address.toLowerCase())
+        .sort((a, b) => {
+          // active first (Pending > Open > Closed), then newest first
+          const rank = (s: number) => (s === ArenaStatus.Pending ? 0 : s === ArenaStatus.Open ? 1 : 2)
+          return rank(a.status) - rank(b.status) || Number(b.id - a.id)
+        }),
     [address, stands],
   )
-  const open = useMemo(() => stands.filter((stand) => stand.status === ArenaStatus.Open), [stands])
+  const open = useMemo(
+    () => stands.filter((stand) => stand.status === ArenaStatus.Open).sort((a, b) => Number(b.id - a.id)),
+    [stands],
+  )
 
   const refresh = useCallback(async (): Promise<void> => {
     await Promise.all([minStakeQuery.refetch(), countQuery.refetch(), standsQuery.refetch()])
