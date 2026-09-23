@@ -233,6 +233,7 @@ export function useDuel() {
       let stake: bigint
       try {
         stake = parseEther(stakeMon)
+        if (stake < 0n) throw new Error('negative')
       } catch {
         setPhase('error')
         setError('押金格式不对。')

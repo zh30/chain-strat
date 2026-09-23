@@ -39,7 +39,7 @@ export function DuelView() {
   const duel = useDuel()
   const [stake, setStake] = useState('0')
   const [createdId, setCreatedId] = useState<bigint | null>(null)
-  const [copied, setCopied] = useState(false)
+  const [copiedId, setCopiedId] = useState<string | null>(null)
   const [busyId, setBusyId] = useState<string | null>(null)
   const selected = heroId ? heroes.find((hero) => hero.id === heroId) : null
   const canAct = Boolean(duel.ready && selected && combo.length > 0)
@@ -64,8 +64,8 @@ export function DuelView() {
     const link = `${window.location.origin}${duelInvitePath(duelId)}`
     try {
       await navigator.clipboard.writeText(link)
-      setCopied(true)
-      window.setTimeout(() => setCopied(false), 2000)
+      setCopiedId(duelId.toString())
+      window.setTimeout(() => setCopiedId(null), 2000)
     } catch {
       window.prompt('复制这条约战链接', link)
     }
@@ -132,7 +132,7 @@ export function DuelView() {
                 onRefund={() => void duel.claimRefund(invited.id)}
                 onBattle={() => void startBattle(invited)}
                 onCopy={() => void copyInvite(invited.id)}
-                copied={copied}
+                copied={copiedId === invited.id.toString()}
                 battling={busyId === invited.id.toString()}
               />
             </div>
@@ -180,7 +180,7 @@ export function DuelView() {
               <div className="mt-4 rounded-xl border border-gold/40 bg-ink/40 p-3 text-sm">
                 <span className="text-gold">约战 #{createdId.toString()} 已挂出。</span>
                 <button type="button" className="ml-2 text-gold underline" onClick={() => void copyInvite(createdId)}>
-                  {copied ? '已复制' : '复制邀请链接'}
+                  {copiedId === createdId.toString() ? '已复制' : '复制邀请链接'}
                 </button>
               </div>
             )}
@@ -210,7 +210,7 @@ export function DuelView() {
                   onRefund={() => void duel.claimRefund(d.id)}
                   onBattle={() => void startBattle(d)}
                   onCopy={() => void copyInvite(d.id)}
-                  copied={copied}
+                  copied={copiedId === d.id.toString()}
                   battling={busyId === d.id.toString()}
                 />
               ))}
@@ -246,7 +246,7 @@ export function DuelView() {
                     onRefund={() => void duel.claimRefund(d.id)}
                     onBattle={() => void startBattle(d)}
                     onCopy={() => void copyInvite(d.id)}
-                    copied={copied}
+                    copied={copiedId === d.id.toString()}
                     battling={busyId === d.id.toString()}
                   />
                 ))}
