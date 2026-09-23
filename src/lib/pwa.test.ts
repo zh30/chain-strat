@@ -1,9 +1,11 @@
 import { describe, expect, it } from 'vitest'
 import {
   IOS_HINT_DISMISS_KEY,
+  duelInvitePath,
   isIosSafari,
   isLiveScreen,
   isStandaloneDisplay,
+  parseDuelParam,
   parseScreenParam,
   pathForScreen,
   readFlag,
@@ -17,8 +19,19 @@ describe('parseScreenParam', () => {
     expect(parseScreenParam('?screen=combo&x=1')).toBe('combo')
     expect(parseScreenParam('?screen=market')).toBe('market')
     expect(parseScreenParam('?screen=arena')).toBe('arena')
+    expect(parseScreenParam('?screen=duel')).toBe('duel')
     expect(parseScreenParam('?screen=battle')).toBeNull()
     expect(parseScreenParam('')).toBeNull()
+  })
+})
+
+describe('duel invite param', () => {
+  it('reads numeric duel ids and builds invite paths', () => {
+    expect(parseDuelParam('?screen=duel&duel=7')).toBe(7n)
+    expect(parseDuelParam('?duel=42')).toBe(42n)
+    expect(parseDuelParam('?duel=abc')).toBeNull()
+    expect(parseDuelParam('?screen=duel')).toBeNull()
+    expect(duelInvitePath(7n)).toBe('/?screen=duel&duel=7')
   })
 })
 
@@ -28,6 +41,7 @@ describe('pathForScreen', () => {
     expect(pathForScreen('ladder')).toBe('/?screen=ladder')
     expect(pathForScreen('market')).toBe('/?screen=market')
     expect(pathForScreen('arena')).toBe('/?screen=arena')
+    expect(pathForScreen('duel')).toBe('/?screen=duel')
     expect(pathForScreen('match')).toBeNull()
     expect(pathForScreen('battle')).toBeNull()
   })

@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react'
 import { BaseError, UserRejectedRequestError, formatEther } from 'viem'
 import { useAccount, usePublicClient, useWriteContract } from 'wagmi'
 import { arenaContractReady, useArena } from '../hooks/useArena'
+import { duelContractReady, useDuel } from '../hooks/useDuel'
 import { MONAD_TESTNET_ID } from '../lib/chain'
 import { battleRecorderAbi } from '../lib/abi'
 import { shortAddress } from '../lib/chain'
@@ -99,8 +100,10 @@ export function ResultView() {
   const client = usePublicClient({ chainId: MONAD_TESTNET_ID })
   const { writeContractAsync } = useWriteContract()
   const arena = useArena()
+  const duel = useDuel()
   const [tx, setTx] = useState<string | null>(null)
   const [arenaPhase, setArenaPhase] = useState<'idle' | 'pending' | 'done' | 'failed'>('idle')
+  const [duelPhase, setDuelPhase] = useState<'idle' | 'pending' | 'done' | 'failed'>('idle')
   const [err, setErr] = useState<string | null>(null)
   const [phase, setPhase] = useState<'idle' | 'wallet' | 'pending' | 'done' | 'failed'>('idle')
   const [reward, setReward] = useState<MatchReward | null>(null)
@@ -139,6 +142,11 @@ export function ResultView() {
           const settled = await arena.resolve(payload)
           setArenaPhase(settled ? 'done' : 'failed')
         }
+        if (payload.duel && duelContractReady()) {
+          setDuelPhase('pending')
+          const settled = await duel.settle(payload)
+          setDuelPhase(settled ? 'done' : 'failed')
+        }
         setPhase('done')
         return
       }
@@ -165,6 +173,11 @@ export function ResultView() {
         const settled = await arena.resolve(payload)
         setArenaPhase(settled ? 'done' : 'failed')
       }
+      if (payload.duel && duelContractReady()) {
+        setDuelPhase('pending')
+        const settled = await duel.settle(payload)
+        setDuelPhase(settled ? 'done' : 'failed')
+      }
       const after = await snapshotPlayer(client, recorder, address)
       setReward(buildReward(before, after, outcome, payload.result.reason, payload.vsBot, youTally, false))
       setTx(hash)
@@ -183,7 +196,7 @@ export function ResultView() {
       setPhase('failed')
       setErr(message)
     }
-  }, [address, arena, canChain, client, payload, recorder, writeContractAsync])
+  }, [address, arena, duel, canChain, client, payload, recorder, writeContractAsync])
 
   useEffect(() => {
     if (!payload || !canChain || !client || !address) return
@@ -221,6 +234,7 @@ export function ResultView() {
         </div>
         <h2 className={`font-display mt-2 text-6xl tracking-[0.2em] sm:text-7xl ${verdictColor}`}>{verdict}</h2>
         {payload.arena && <StakeStrip payload={payload} youWin={youWin} draw={draw} phase={arenaPhase} />}
+        {payload.duel && <DuelStrip payload={payload} youWin={youWin} draw={draw} phase={duelPhase} />}
         {reward && <RewardStrip reward={reward} />}
       </div>
 
@@ -334,6 +348,38 @@ function StakeStrip({
       {phase === 'pending' ? ' · 正在结算押金' : ''}
       {phase === 'done' ? ' · 押金已上链' : ''}
       {phase === 'failed' ? ' · 押金结算未完成，可回擂台重试' : ''}
+    </p>
+  )
+}
+
+function DuelStrip({
+  payload,
+  youWin,
+  draw,
+  phase,
+}: {
+  payload: MatchPayload
+  youWin: boolean
+  draw: boolean
+  phase: 'idle' | 'pending' | 'done' | 'failed'
+}) {
+  const duel = payload.duel
+  if (!duel) return null
+  const stake = formatEther(BigInt(duel.stakeWei))
+  const prize = formatEther(BigInt(duel.winnerPayoutWei))
+  const cut = formatEther(BigInt(duel.treasuryWei))
+  const line = draw
+    ? `平局退押 · 各退 ${stake} MON`
+    : youWin
+      ? `胜者得 ${prize} MON · 金库 ${cut} MON`
+      : `押金 ${stake} MON 已按 95/5 结算`
+  return (
+    <p className="mt-3 text-sm text-gold-dim">
+      约战 · 押金 {stake} MON
+      {draw ? '' : ` × 2`} · {line}
+      {phase === 'pending' ? ' · 正在结算押金' : ''}
+      {phase === 'done' ? ' · 押金已上链' : ''}
+      {phase === 'failed' ? ' · 押金结算未完成，可回约战页重试' : ''}
     </p>
   )
 }

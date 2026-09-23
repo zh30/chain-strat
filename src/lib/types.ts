@@ -129,6 +129,13 @@ export interface ArenaSettlement {
   challengerCombo: string
 }
 
+export interface DuelSettlement {
+  duelId: string
+  stakeWei: string
+  winnerPayoutWei: string
+  treasuryWei: string
+}
+
 export interface MatchPayload {
   matchId: `0x${string}`
   seed: number
@@ -137,6 +144,7 @@ export interface MatchPayload {
   result: BattleResult
   signature: `0x${string}`
   arena?: ArenaSettlement
+  duel?: DuelSettlement
 }
 
 export const BOT_ADDRESS = '0x0000000000000000000000000000000000000000' as const

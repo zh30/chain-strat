@@ -91,6 +91,7 @@ export default defineConfig({
           { name: '英雄库', short_name: '英雄库', url: '/?screen=library' },
           { name: '天梯', short_name: '天梯', url: '/?screen=ladder' },
           { name: '擂台', short_name: '擂台', url: '/?screen=arena' },
+          { name: '约战', short_name: '约战', url: '/?screen=duel' },
         ],
         screenshots: [
           {

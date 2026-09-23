@@ -1,10 +1,11 @@
 import { DurableObject } from 'cloudflare:workers'
 import { createPublicClient, http, keccak256, type Hex } from 'viem'
 import { privateKeyToAccount } from 'viem/accounts'
-import { arenaAbi } from '../src/lib/abi'
+import { arenaAbi, duelHouseAbi } from '../src/lib/abi'
 import { commitStandCombo, hashCombo, simulateArenaChallenge, standStorageKey } from '../src/lib/arena'
 import { generateBotLoadout } from '../src/lib/combo'
 import { simulateBattle } from '../src/lib/combat'
+import { simulateDuel } from '../src/lib/duel'
 import { seedFromBytes } from '../src/lib/rng'
 import { payloadToMatchMessage, signMatch } from '../src/lib/signing'
 import { MONAD_TESTNET_ID } from '../src/lib/chain'
@@ -18,6 +19,7 @@ export interface Env {
   AUTHORITY_ADDRESS: string
   BATTLE_RECORDER_ADDRESS: `0x${string}`
   ARENA_ADDRESS: `0x${string}`
+  DUEL_HOUSE_ADDRESS: `0x${string}`
   MONAD_RPC: string
 }
 
@@ -37,6 +39,7 @@ type ClientMsg =
   | { type: 'cancel' }
   | { type: 'stand_store'; standId: string; combo: string[]; role?: 'defender' | 'challenger' }
   | { type: 'arena_challenge'; standId: string; combo?: string[] }
+  | { type: 'duel_settle'; duelId: string }
 
 const CANONICAL_HOST = 'chainstrat.zhanghe.dev'
 const SHORT_HOSTS = new Set(['cs.zhanghe.dev'])
@@ -146,6 +149,11 @@ export class Matchmaker extends DurableObject<Env> {
       if (msg.type === 'arena_challenge') {
         if (msg.combo) await this.storeStandCombo(msg.standId, msg.combo, 'challenger')
         const payload = await this.resolveArena(msg.standId)
+        ws.send(JSON.stringify({ type: 'matched', payload }))
+        return
+      }
+      if (msg.type === 'duel_settle') {
+        const payload = await this.resolveDuel(msg.duelId)
         ws.send(JSON.stringify({ type: 'matched', payload }))
         return
       }
@@ -382,7 +390,48 @@ export class Matchmaker extends DurableObject<Env> {
       nonce: stand.nonce,
       stakeWei: stand.stake,
     })
+    return this.signAndStore(payload)
+  }
 
+  private duelConfigured(): `0x${string}` | null {
+    const addr = this.env.DUEL_HOUSE_ADDRESS
+    if (!addr || addr === '0x0000000000000000000000000000000000000000') return null
+    return addr
+  }
+
+  private async resolveDuel(duelIdRaw: string): Promise<MatchPayload> {
+    const address = this.duelConfigured()
+    if (!address) throw new Error('duel house not configured')
+    const duelId = BigInt(duelIdRaw)
+    const client = createPublicClient({ transport: http(this.env.MONAD_RPC) })
+    const duel = await client.readContract({
+      address,
+      abi: duelHouseAbi,
+      functionName: 'duelAt',
+      args: [duelId],
+    })
+    if (duel.status !== 2) throw new Error('duel is not committed')
+    if (!duel.revealedA || !duel.revealedB) throw new Error('reveals not complete')
+
+    const { payload } = simulateDuel({
+      duelId,
+      playerA: duel.playerA,
+      playerB: duel.playerB,
+      heroA: duel.heroA,
+      heroB: duel.heroB,
+      comboA: duel.comboA,
+      saltA: duel.saltA,
+      commitA: duel.commitA,
+      comboB: duel.comboB,
+      saltB: duel.saltB,
+      commitB: duel.commitB,
+      entropy: duel.entropy,
+      stakeWei: duel.stake,
+    })
+    return this.signAndStore(payload)
+  }
+
+  private async signAndStore(payload: Omit<MatchPayload, 'signature'>): Promise<MatchPayload> {
     const signed: MatchPayload = { ...payload, signature: '0x' }
     const pk = this.env.AUTHORITY_PRIVATE_KEY
     const recorder = this.env.BATTLE_RECORDER_ADDRESS

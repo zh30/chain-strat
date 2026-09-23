@@ -106,6 +106,13 @@ export function Hall() {
               <p className="mt-1 text-sm text-mute">挂上英雄和连招。人不在，计还在。</p>
             </div>
           </button>
+          <button type="button" className="lobby-door" onClick={() => setScreen('duel')}>
+            <b>06</b>
+            <div>
+              <strong>约战</strong>
+              <p className="mt-1 text-sm text-mute">先藏计，后揭榜。一条链接请君入渊。</p>
+            </div>
+          </button>
         </div>
       </div>
     </section>

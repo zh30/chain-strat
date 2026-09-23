@@ -4,6 +4,7 @@ import { BattleView } from './components/BattleView'
 import { DemoBattle, isDemoBattleRequest } from './components/DemoBattle'
 import { ComboBuilder } from './components/ComboBuilder'
 import { ArenaView } from './components/ArenaView'
+import { DuelView } from './components/DuelView'
 import { ComboMarket } from './components/ComboMarket'
 import { GameHud } from './components/GameHud'
 import { Hall } from './components/Hall'
@@ -15,7 +16,7 @@ import { ResultView } from './components/ResultView'
 import { TitleScreen } from './components/TitleScreen'
 import { usePwaInstall } from './hooks/usePwaInstall'
 import { useStarterPack } from './hooks/useStarterPack'
-import { pathForScreen } from './lib/pwa'
+import { duelInvitePath, parseDuelParam, pathForScreen } from './lib/pwa'
 import { useGame } from './store'
 
 const PLAY_SCREENS = new Set(['combo', 'match', 'battle', 'result', 'arena'])
@@ -40,7 +41,11 @@ export default function App() {
     if (!next) return
     const url = new URL(next, window.location.origin)
     const current = `${window.location.pathname}${window.location.search}`
-    const desired = `${url.pathname}${url.search}`
+    let desired = `${url.pathname}${url.search}`
+    if (screen === 'duel') {
+      const duelId = parseDuelParam(window.location.search)
+      if (duelId) desired = duelInvitePath(duelId)
+    }
     if (current !== desired) window.history.replaceState(null, '', desired)
   }, [screen])
 
@@ -69,6 +74,7 @@ export default function App() {
         {screen === 'ladder' && <Ladder />}
         {screen === 'market' && <ComboMarket />}
         {screen === 'arena' && <ArenaView />}
+        {screen === 'duel' && <DuelView />}
       </main>
     </div>
   )

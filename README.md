@@ -47,6 +47,7 @@
 - **天梯**：基础排名页。
 - **SkillCombo NFT**：把当前连招铸成指定英雄的可交易 NFT，支持挂单 / 取消 / 用 MON 购买，出战可直接载入。
 - **守擂擂台**：异步 PvP。上擂质押英雄 + 连招哈希，任何人等额挑战；种子由链上熵派生，胜者拿双方押金的 95%。
+- **约战（Commit-Reveal）**：P3 去中心化对战。双方先把连招哈希 + 盐上链，再各自揭榜；种子由双盐和第二位揭榜者的 `block.prevrandao` 派生，Worker 只代跑模拟不再决定输入。24 小时不揭榜判负，押金胜者拿 95%。
 - **PWA**：可安装；对战 / 匹配中不自动刷新 Service Worker。
 
 玩法细则（眩晕 / 定身 / 加时 / 同 tick 顺序）见 [`docs/rules.md`](docs/rules.md)。英雄数值见 [`docs/prd.md`](docs/prd.md) 附录，实现以 `src/lib/heroes.ts` 为准。
@@ -116,6 +117,7 @@ pnpm dev
 | `VITE_BATTLE_RECORDER_ADDRESS` | 战报与 Elo | `0x4D3fe98448bc03F24EA4d7404c87b6724F5a9027` |
 | `VITE_COMBO_NFT_ADDRESS` | 可交易连招 NFT | `0x2A633509d3929B02A829362B163FDbbaa721a8a3` |
 | `VITE_ARENA_ADDRESS` | 守擂擂台（P1，待部署） | `0x0000000000000000000000000000000000000000` |
+| `VITE_DUEL_HOUSE_ADDRESS` | Commit-Reveal 约战（P3，待部署） | `0x0000000000000000000000000000000000000000` |
 | `VITE_AUTHORITY_ADDRESS` | Worker 签名地址 | `0x52e9A3868375Ba6b4fC92612642068c00936FF56` |
 | `VITE_MONAD_RPC` | 只读 RPC | `https://testnet-rpc.monad.xyz` |
 | `VITE_CHAIN_ID` | 链 ID | `10143` |
@@ -158,6 +160,13 @@ BATTLE_RECORDER_ADDRESS=0x4D3fe98448bc03F24EA4d7404c87b6724F5a9027 \
   forge script script/DeployArena.s.sol \
   --rpc-url https://testnet-rpc.monad.xyz \
   --broadcast
+
+# P3 约战（commit-reveal）
+HERO_NFT_ADDRESS=0x595Ee3d4873898C6b1dfDD6208fc9DFC8b618d84 \
+BATTLE_RECORDER_ADDRESS=0x4D3fe98448bc03F24EA4d7404c87b6724F5a9027 \
+  forge script script/DeployDuel.s.sol \
+  --rpc-url https://testnet-rpc.monad.xyz \
+  --broadcast
 ```
 
 Gas：前端对 `claim` / `record` 使用 `estimateGas` + 10% buffer，避免钱包回落到异常高的 gas limit。
@@ -170,6 +179,7 @@ Gas：前端对 `claim` / `record` 使用 `estimateGas` + 10% buffer，避免钱
 | BattleRecorder | `0x4D3fe98448bc03F24EA4d7404c87b6724F5a9027` | [monadscan](https://testnet.monadscan.com/address/0x4D3fe98448bc03F24EA4d7404c87b6724F5a9027) |
 | ComboNFT | `0x2A633509d3929B02A829362B163FDbbaa721a8a3` | [monadscan](https://testnet.monadscan.com/address/0x2A633509d3929B02A829362B163FDbbaa721a8a3) |
 | Arena | 待 `script/DeployArena.s.sol` 广播 | — |
+| DuelHouse | 待 `script/DeployDuel.s.sol` 广播 | — |
 | Owner | `0x1872277f92af762768c5280fa9fa65f92674a304` | — |
 | Authority | `0x52e9A3868375Ba6b4fC92612642068c00936FF56` | — |
 
