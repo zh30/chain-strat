@@ -268,14 +268,24 @@ export function useDuel() {
         })
       })
       if (!ok) return null
-      const ids = await client.readContract({
-        address: duelHouseAddress,
-        abi: duelHouseAbi,
-        functionName: 'duelsOf',
-        args: [address],
-      })
-      const duelId = ids[ids.length - 1]
-      if (duelId === undefined) return null
+      // The receipt is final but the follow-up read can lag a block; retry briefly rather
+      // than drop the salt+commit (losing it forfeits the duel and stake on-chain).
+      let duelId: bigint | undefined
+      for (let attempt = 0; attempt < 5 && duelId === undefined; attempt += 1) {
+        const ids = await client.readContract({
+          address: duelHouseAddress,
+          abi: duelHouseAbi,
+          functionName: 'duelsOf',
+          args: [address],
+        })
+        duelId = ids[ids.length - 1]
+        if (duelId === undefined) await new Promise((resolve) => setTimeout(resolve, 1000))
+      }
+      if (duelId === undefined) {
+        setPhase('error')
+        setError('约战已上链，但取回对局号失败——刷新后从「我的约战」里复制链接。')
+        return null
+      }
       saveDuelCommit(window.localStorage, duelId, { salt, combo })
       return duelId
     },
