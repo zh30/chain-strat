@@ -3,10 +3,16 @@ import { fighterTag } from '../lib/chain'
 import { getHero, getSkill } from '../lib/heroes'
 import type { BattleEvent, MatchPayload, Side } from '../lib/types'
 import {
+  ANTICIPATE_EXEC,
   CLASH_SLOW,
   DEATH_SLOW,
+  HIT_STOP_CRIT_MS,
+  HIT_STOP_DEATH_MS,
+  HIT_STOP_EXECUTE_MS,
+  HIT_STOP_SCALE,
   OVERTIME_SLOW,
   highlightForDamage,
+  isExecuteSkill,
   shouldClash,
   skillApproach,
   strongerPulse,
@@ -35,6 +41,7 @@ export class BattleScene extends Phaser.Scene {
   private lastCast: { side: Side; skillId: string; t: number } | null = null
   private pulse: SlowPulse | null = null
   private pulseUntil = 0
+  private hitstopUntil = 0
   private elapsed = 0
   private lastTs = 0
   private youAddress: string | null = null
@@ -54,6 +61,7 @@ export class BattleScene extends Phaser.Scene {
     this.lastCast = null
     this.pulse = null
     this.pulseUntil = 0
+    this.hitstopUntil = 0
     this.elapsed = 0
     this.lastTs = 0
     const a = getHero(this.payload.players[0].heroId)
@@ -149,7 +157,11 @@ export class BattleScene extends Phaser.Scene {
     this.lastTs = now
     this.elapsed += step
     if (this.pulse && this.elapsed >= this.pulseUntil) this.clearSlow()
-    const scale = (this.pulse?.scale ?? 1) * 0.8
+    if (this.elapsed >= this.hitstopUntil && this.tweens.timeScale !== (this.pulse?.scale ?? 1) * 0.8) {
+      this.tweens.timeScale = (this.pulse?.scale ?? 1) * 0.8
+    }
+    const stopped = this.elapsed < this.hitstopUntil
+    const scale = (stopped ? 0 : (this.pulse?.scale ?? 1)) * 0.8
     this.battleTime += (step / 1000) * scale
     this.clock?.setText(this.battleTime.toFixed(1))
     const log = this.payload.result.events
@@ -198,9 +210,11 @@ export class BattleScene extends Phaser.Scene {
           shouldClash(this.lastCast.skillId, e.skillId, e.t - this.lastCast.t)
         const opts = clash || skillApproach(e.skillId) === 'clash' ? { clashX: clash ? w / 2 - 56 * (e.side === 0 ? 1 : -1) : undefined } : undefined
         if (clash) {
-          this.applySlow(CLASH_SLOW)
+          this.applySlow(CLASH_SLOW, w / 2)
           clashBurst(this, w / 2, h * 0.56)
           this.cameras.main.shake(160, 0.012)
+        } else if (isExecuteSkill(e.skillId)) {
+          this.applySlow(ANTICIPATE_EXEC, this.blendFocus(self.x))
         }
         self.playCast(this, e.skillId, foeActor.x, foeActor.y, opts)
         this.showCallout(e.side, e.skillId)
@@ -213,7 +227,13 @@ export class BattleScene extends Phaser.Scene {
       case 'damage': {
         const target = this.actors?.[e.side]
         const highlight = highlightForDamage(e.isCrit, e.source)
-        if (highlight) this.applySlow(highlight)
+        if (highlight) this.applySlow(highlight, this.blendFocus(target?.x))
+        if (isExecuteSkill(e.source)) {
+          this.hitStop(HIT_STOP_EXECUTE_MS)
+          this.showStamp('终结一击')
+        } else if (e.isCrit) {
+          this.hitStop(HIT_STOP_CRIT_MS)
+        }
         this.floatText(e.side, `${e.amount}${e.isCrit ? ' 暴击' : ''}`, e.isCrit ? '#e4c36a' : '#efe6d2', e.isCrit ? 36 : 24)
         this.cameras.main.shake(e.isCrit ? 180 : 110, e.isCrit ? 0.016 : 0.009)
         if (e.isCrit) this.cameras.main.flash(80, 228, 195, 106, false)
@@ -253,11 +273,15 @@ export class BattleScene extends Phaser.Scene {
         this.tweens.add({ targets: this.otBanner, alpha: 0.25, yoyo: true, repeat: 8, duration: 240 })
         this.cameras.main.flash(180, 194, 59, 59, false)
         break
-      case 'death':
-        this.actors?.[e.side].die(this)
-        this.applySlow(DEATH_SLOW)
+      case 'death': {
+        const fallen = this.actors?.[e.side]
+        fallen?.die(this)
+        this.hitStop(HIT_STOP_DEATH_MS)
+        this.applySlow(DEATH_SLOW, this.blendFocus(fallen?.x))
+        this.cameras.main.shake(220, 0.018)
         this.cameras.main.flash(120, 255, 255, 255, false)
         break
+      }
       case 'battle_end': {
         this.finished = true
         const hold = this.pulse ? this.pulse.durationMs + 80 : 240
@@ -273,11 +297,24 @@ export class BattleScene extends Phaser.Scene {
     }
   }
 
-  private applySlow(next: SlowPulse): void {
+  /** Blend an actor x toward screen center so both fighters stay framed while zoomed. */
+  private blendFocus(x: number | undefined): number {
+    const mid = this.scale.width / 2
+    return x === undefined ? mid : x * 0.55 + mid * 0.45
+  }
+
+  /** Freeze playback and tweens for ms — a true hit-stop layered over slow pulses. */
+  private hitStop(ms: number): void {
+    this.hitstopUntil = Math.max(this.hitstopUntil, this.elapsed + ms)
+    this.tweens.timeScale = HIT_STOP_SCALE * 0.8
+  }
+
+  private applySlow(next: SlowPulse, focusX?: number): void {
     this.pulse = strongerPulse(this.pulse, next)
     this.pulseUntil = this.elapsed + this.pulse.durationMs
     this.tweens.timeScale = this.pulse.scale * 0.8
     this.cameras.main.zoomTo(this.pulse.zoom, 140)
+    this.cameras.main.pan(focusX ?? this.scale.width / 2, this.scale.height * 0.56, 200, 'Sine.easeInOut', true)
     this.tweens.add({
       targets: [this.letterTop, this.letterBot],
       height: 42,
@@ -289,6 +326,7 @@ export class BattleScene extends Phaser.Scene {
     this.pulse = null
     this.tweens.timeScale = 0.8
     this.cameras.main.zoomTo(1, 220)
+    this.cameras.main.pan(this.scale.width / 2, this.scale.height / 2, 240, 'Sine.easeInOut', true)
     this.tweens.add({
       targets: [this.letterTop, this.letterBot],
       height: 0,
@@ -314,6 +352,21 @@ export class BattleScene extends Phaser.Scene {
       duration: 700,
       delay: 180,
     })
+  }
+
+  private showStamp(text: string): void {
+    const w = this.scale.width
+    const stamp = this.add
+      .text(w / 2, this.scale.height * 0.36, text, {
+        fontFamily: 'Noto Serif SC',
+        fontSize: '44px',
+        color: '#e4c36a',
+      })
+      .setOrigin(0.5)
+      .setAlpha(0)
+      .setScale(1.6)
+    this.tweens.add({ targets: stamp, alpha: 1, scale: 1, duration: 140 })
+    this.tweens.add({ targets: stamp, alpha: 0, y: stamp.y - 30, duration: 320, delay: 420, onComplete: () => stamp.destroy() })
   }
 
   private showResult(winner: 0 | 1 | null): void {
