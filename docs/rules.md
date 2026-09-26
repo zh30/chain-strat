@@ -168,3 +168,22 @@ acc %= 2000
 - **撤擂**：无进行中的挑战时，擂主可撤擂并取回押金，擂台关闭。
 - **防换招**：结算时合约用 `keccak256(bytes(combo))` 核对上擂 / 挑战时的哈希，不符则拒绝。同一场挑战不可重复结算。
 - **Elo**：守擂按真人对局记入现有 `BattleRecorder.recordBattle`，K=32。本阶段结算仍需 authority 签名；去中心化在后续阶段完成。
+
+## 15. Commit-Reveal 约战
+
+约战把一局对战的**全部输入**搬上链：连招互相保密到最后一刻，种子无人可控，任何人可用链上数据独立复算结果。本阶段结算仍由 authority 签名（Worker 只是执行者），无需签名的结算在后续阶段完成。
+
+- **流程**：A 创建约战（选英雄 + `commit`）→ B 应战（选英雄 + `commit`）→ 双方各自 `reveal`（连招明文 + salt，顺序不限）→ 第二份 reveal 落块后，任何人可请求 Worker 模拟结算 → 客户端提交 `settle`。
+- **承诺**：`commit = keccak256(abi.encodePacked(keccak256(bytes(comboPlaintext)), salt))`。`comboPlaintext` 为 `JSON.stringify(skillId[])`（与第 14 节守擂同一编码）。salt 为玩家本地生成的随机 `bytes32`，**只存本地**；丢 salt 无法 reveal，等于弃赛，界面必须醒目提示。
+- **种子**：第二份 reveal 落块时合约记录 `entropy = uint256(block.prevrandao)`，`seed = uint64(uint32(uint256(keccak256(abi.encodePacked(saltA, saltB, entropy)))))`。双方都 committed 后 seed 才成形，后 reveal 方也无法预知种子，不能「先看结果再决定揭不揭」。
+- **matchId**：`keccak256(abi.encodePacked("duel", duelId))`。每场约战只结算一次。
+- **押金**：创建时可选押注（0 也行），应战须等额。分配与第 14 节相同：胜者拿奖池 95%，5% 进协议金库；平局各退。
+- **超时**：应战成交后进入 **24 小时 reveal 窗口**。
+  - 一方已 reveal、对方超时未 reveal：已 reveal 方 `claimTimeout` 判胜，按胜者分配。
+  - 双方都未 reveal 超时：任何人可 `claimRefund`，押金各退。
+  - 双方都 reveal 但 24 小时无人结算：任何人可 `claimRefund`，押金各退（authority 失效时的逃生阀；正常情况下结算无许可，胜方自有动力提交）。
+- **撤局**：约战未被应战前，创建者可 `cancelDuel` 取回押金。
+- **防换招**：`reveal` 时合约核对承诺哈希；`settle` 时合约核对玩家、英雄、种子与签名结果一致。
+- **Elo**：按真人对局记入 `BattleRecorder.recordBattle`，K=32。记录与 `settle` 分属两笔交易，客户端先 `recordBattle` 再 `settle`（与第 14 节同）。
+- **Worker 职责**：`duel_settle` 消息读取链上 duel（连招、salt、entropy 均为链上数据），复算 seed 并模拟、签名，返回 `settle` 所需参数。Worker 看到的连招与所有人看到的一样——它不再保管秘密。
+- **前端**：创建后生成邀请链接 `/?screen=duel&duel=<id>`，可直接发给任何人；对方点开即进入应战流程。

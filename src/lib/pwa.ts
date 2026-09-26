@@ -3,7 +3,7 @@ import type { Screen } from '../store'
 export const INSTALL_DISMISS_KEY = 'chainstrat.pwa.installDismissed'
 export const IOS_HINT_DISMISS_KEY = 'chainstrat.pwa.iosHintDismissed'
 
-export const DEEP_LINK_SCREENS = ['hall', 'library', 'ladder', 'combo', 'market', 'arena'] as const
+export const DEEP_LINK_SCREENS = ['hall', 'library', 'ladder', 'combo', 'market', 'arena', 'duel'] as const
 export type DeepLinkScreen = (typeof DEEP_LINK_SCREENS)[number]
 
 export function parseScreenParam(search: string): DeepLinkScreen | null {
@@ -20,11 +20,24 @@ export function pathForScreen(screen: Screen): string | null {
     screen === 'ladder' ||
     screen === 'combo' ||
     screen === 'market' ||
-    screen === 'arena'
+    screen === 'arena' ||
+    screen === 'duel'
   ) {
     return `/?screen=${screen}`
   }
   return null
+}
+
+/** Invite-link parameter: /?screen=duel&duel=<id> */
+export function parseDuelParam(search: string): bigint | null {
+  const query = search.startsWith('?') ? search.slice(1) : search
+  const raw = new URLSearchParams(query).get('duel')
+  if (!raw || !/^\d+$/.test(raw)) return null
+  return BigInt(raw)
+}
+
+export function duelInvitePath(duelId: bigint | string): string {
+  return `/?screen=duel&duel=${duelId.toString()}`
 }
 
 export function isLiveScreen(screen: Screen): boolean {
